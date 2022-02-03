@@ -1,23 +1,25 @@
 // import logo from './logo.svg';
 // import './App.css';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom' 
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import SignIn from "./components/auth/SignIn";
-import Dashboard from './components/dashboard/Dashboard';
-import { createTheme, ThemeProvider } from '@material-ui/core'
-import CarList from './components/car/CarList';
-import Manage from './components/manage/Manage';
-import Log from './components/log/Log';
-import Profile from './components/profile/Profile';
-import Admin from './components/manage/admin/Admin';
-import CarBrand from './components/manage/carBrand/CarBrand';
-import PriceRange from './components/manage/priceRange/PriceRange';
-import CarType from './components/manage/carType/CarType';
-import CarModel from './components/manage/carModel/CarModel';
-import CarVariant from './components/manage/carVariant/CarVariant'
-import { blue } from '@material-ui/core/colors';
-import { yellow } from '@material-ui/core/colors';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import Dashboard from "./components/dashboard/Dashboard";
+import { createTheme, ThemeProvider } from "@material-ui/core";
+import CarList from "./components/car/CarList";
+import Manage from "./components/manage/Manage";
+import Log from "./components/log/Log";
+import Profile from "./components/profile/Profile";
+import Admin from "./components/manage/admin/Admin";
+import CarBrand from "./components/manage/carBrand/CarBrand";
+import PriceRange from "./components/manage/priceRange/PriceRange";
+import BodyType from "./components/manage/bodyType/BodyType";
+import CarModel from "./components/manage/carModel/CarModel";
+import CarVariant from "./components/manage/carVariant/CarVariant";
+import { blue } from "@material-ui/core/colors";
+import { yellow } from "@material-ui/core/colors";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import CarDetail from "./components/car/CarDetail";
+import SignUp from "./components/auth/SignUp"
 
 // Customizing UI component
 const theme = createTheme({
@@ -25,7 +27,7 @@ const theme = createTheme({
     primary: blue,
     secondary: yellow,
   },
-})
+});
 
 function App() {
   return (
@@ -35,6 +37,9 @@ function App() {
         <Switch>
           <Route path="/signin">
             <SignIn />
+          </Route>
+          <Route path="/signup">
+            <SignUp />
           </Route>
           <Route exact path="/">
             <Dashboard />
@@ -60,8 +65,8 @@ function App() {
           <Route path="/manage/pricerange">
             <PriceRange />
           </Route>
-          <Route path="/manage/cartype">
-            <CarType />
+          <Route path="/manage/bodytype">
+            <BodyType />
           </Route>
           <Route path="/manage/carmodel">
             <CarModel />
@@ -69,6 +74,7 @@ function App() {
           <Route path="/manage/carvariant">
             <CarVariant />
           </Route>
+          <Route path="/cardetail/:cmId/:vId" component={CarDetail}/>//car model's id
         </Switch>
       </Router>
     </ThemeProvider>

@@ -74,14 +74,17 @@ const MoreMenu = ({ title, data, handleRemove, carBrand, carType }) => {
                     <MenuList autoFocusItem={open} id="menu-list-grow" onKeyDown={handleListKeyDown}>
                         <MenuItem>
                             {carBrand ? (
-                                <FormDialog title={title} carBrand={carBrand} update='yes'/>
+                                <FormDialog title={title} carBrand={carBrand} update='yes' moreMenu="yes" handleCloseMoreMenu={handleToggle}/>
                             ) : (
-                                <FormDialog title={title} carType={carType} update='yes'/>
+                                <FormDialog title={title} carType={carType} update='yes' moreMenu="yes"/>
                             )}
-                            
                         </MenuItem>
                         <MenuItem>
-                            <DeleteIcon color='primary' onClick={() => handleRemove(data)}/>
+                            {carBrand ? (
+                                <FormDialog title="Delete Car Brand" carBrand={carBrand} toDelete="yes" moreMenu="yes" handleCloseMoreMenu={handleToggle}/>
+                            ) : (
+                                <FormDialog title="Delete Car Type" carType={carType} toDelete="yes" moreMenu="yes"/>
+                            )}
                         </MenuItem>
                     </MenuList>
                     </ClickAwayListener>

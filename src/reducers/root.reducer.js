@@ -8,6 +8,11 @@ import { combineReducers } from "redux";
 import { firestoreReducer } from "redux-firestore";
 import { firebaseReducer } from "react-redux-firebase";
 import carModelReducer from "./carModel.reducer";
+import carVariantReducer from "./carVariant.reducer";
+import carPhotoReducer from "./carPhoto.reducer";
+import engineDetailReducer from "./engineDetail.reducer";
+import performanceDetailReducer from "./performanceDetail.reducer";
+import transmissionDetailReducer from "./transmissionDetail.reducer";
 
 const rootReducer = combineReducers({
     auth: authReducer,
@@ -17,6 +22,11 @@ const rootReducer = combineReducers({
     carType: carTypeReducer,
     priceRange: priceRangeReducer,
     carModel: carModelReducer,
+    carVariant: carVariantReducer,
+    photo: carPhotoReducer,
+    engine: engineDetailReducer,
+    performance: performanceDetailReducer,
+    transmission: transmissionDetailReducer,
     firestore: firestoreReducer,
     firebase: firebaseReducer
 });

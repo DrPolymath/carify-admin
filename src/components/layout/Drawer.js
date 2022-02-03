@@ -1,4 +1,5 @@
 import React from 'react'
+import { connect } from 'react-redux'
 import { Drawer as SideBar, makeStyles, Box } from '@material-ui/core'
 import { useHistory, useLocation } from 'react-router-dom';
 import List from '@material-ui/core/List';
@@ -32,8 +33,10 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const Drawer = () => {
+const Drawer = (props) => {
 
+    const {profile} = props
+    const name = profile.username
     const classes = useStyles()
     const history = useHistory()
     const location = useLocation()
@@ -59,7 +62,7 @@ const Drawer = () => {
             path: '/log'
         },
         {
-            text: 'Me',
+            text: 'Profile',
             icon: <PersonIcon color="primary" />,
             path: '/profile'
         },
@@ -75,8 +78,8 @@ const Drawer = () => {
             anchor="left"
         >
             <div>
-                <Box className={classes.logoContainer}>
-                    <img src='/Logo.png' alt="Logo" width='125'/>
+                <Box className={classes.logoContainer} onClick={() => history.push('/')}>
+                    <img src='/Logo.png' alt="Logo" width='125' />
                 </Box>
             </div>
             
@@ -98,5 +101,11 @@ const Drawer = () => {
     )
 }
 
-export default Drawer
+const mapStateToProps = (state) => {
+    return {
+        profile: state.firebase.profile
+    }
+}
+
+export default connect(mapStateToProps)(Drawer)
 

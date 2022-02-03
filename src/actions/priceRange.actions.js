@@ -15,7 +15,7 @@ export const createPriceRange = (priceRange) => {
                         username: profile.username,
                         email: profile.email,
                         activity: 'Add',
-                        description: 'Add ' + priceRange.minPrice + ' - ' + priceRange.maxPrice + ' into price range',
+                        description: 'Add ( RM ' + priceRange.minPrice + ' < price < RM ' + priceRange.maxPrice + ' ) into price range',
                         timestamp: new Date()
                     })
 
@@ -56,7 +56,7 @@ export const updatePriceRange = (priceRange) => {
                         username: profile.username,
                         email: profile.email,
                         activity: 'Update',
-                        description: 'Update a price range',
+                        description: 'Update price range ( RM ' + priceRange.minPrice + ' < price < RM ' + priceRange.maxPrice + ' )',
                         timestamp: new Date()
                     })
 
@@ -74,7 +74,7 @@ export const updatePriceRange = (priceRange) => {
     };
 };
 
-export const removePriceRange = (priceRange) => {
+export const deletePriceRange = (priceRange) => {
     return (dispatch, getState, { getFirebase }) => {
         const firestore = getFirebase().firestore();
         const profile = getState().firebase.profile;
@@ -90,7 +90,7 @@ export const removePriceRange = (priceRange) => {
                         username: profile.username,
                         email: profile.email,
                         activity: 'Delete',
-                        description: 'Delete ' + priceRange.minPrice + ' - ' + priceRange.maxPrice + ' from price range',
+                        description: 'Delete ( RM ' + priceRange.minPrice + ' < price < RM ' + priceRange.maxPrice + ' ) from price range',
                         timestamp: new Date()
                     })
 

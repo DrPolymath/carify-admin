@@ -1,6 +1,6 @@
 import { storage } from "../config/fbConfig";
 
-export const addCarModel = (carModel) => {
+export const addCarModel = (carModel, carBrandName) => {
     return (dispatch, getState, { getFirebase }) => {
         const firestore = getFirebase().firestore();
         const profile = getState().firebase.profile;
@@ -19,7 +19,7 @@ export const addCarModel = (carModel) => {
                         username: profile.username,
                         email: profile.email,
                         activity: 'Add',
-                        description: 'Add ' + carModel.carModelName + ' into car model',
+                        description: 'Add ' + carModel.carModelName + ' into '+ carBrandName + ' ' + ' model',
                         timestamp: new Date()
                     })
 
@@ -37,8 +37,9 @@ export const addCarModel = (carModel) => {
     };
 };
 
-export const updateCarModel = (carModel) => {
+export const updateCarModel = (carModel, carType, url) => {
     return (dispatch, getState, { getFirebase }) => {
+        console.log(carModel, carType, url)
         const firestore = getFirebase().firestore();
         const profile = getState().firebase.profile;
         firestore
@@ -50,6 +51,8 @@ export const updateCarModel = (carModel) => {
                 {
                     ...carModel,
                     carModelName: carModel.carModelName,
+                    btId: carType,
+                    url: url
                 },
                 { merge: true }
             )
@@ -61,7 +64,7 @@ export const updateCarModel = (carModel) => {
                         username: profile.username,
                         email: profile.email,
                         activity: 'Update',
-                        description: 'Update a car model',
+                        description: 'Update ' + carModel.carBrandName + ' ' + carModel.carModelName,
                         timestamp: new Date()
                     })
 
@@ -105,7 +108,7 @@ export const deleteCarModel = (carModel) => {
                         username: profile.username,
                         email: profile.email,
                         activity: 'Delete',
-                        description: 'Delete ' + carModel.carModelName + ' from car model',
+                        description: 'Delete ' + carModel.carModelName + ' from ' + carModel.carBrandName + ' car model',
                         timestamp: new Date()
                     })
 

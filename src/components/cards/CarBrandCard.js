@@ -7,7 +7,7 @@ import { deleteCarBrand } from '../../actions/carBrand.actions';
 const useStyles = makeStyles((theme) => ({
     container: {
         justifyContent: 'center',
-        alignItems: 'center',
+        alignItems: 'space-evenly',
     },
     content: {
         padding: theme.spacing(3),
@@ -24,25 +24,25 @@ const useStyles = makeStyles((theme) => ({
     },
     card: {
         padding: theme.spacing(1),
+        height:200,
+        width:250
     }
 }));
 
-const CarBrandCard = ({ carBrands, deleteCarBrand }) => {
+const CarBrandCard = ({ carBrands }) => {
     const classes = useStyles()
-
-    const handleRemove = (carBrand) => {
-        deleteCarBrand(carBrand)
-    }
 
     if (carBrands) {
         return (
             <Grid container className={classes.container}>
+            {console.log(carBrands)}
                 {carBrands.map(carBrand => {
+                    {console.log(carBrand)}
                     return (
-                        <Grid className={classes.content} item md={3} key={carBrand.id}>
+                        <Grid className={classes.content} item sm={6} md={4} lg={3} key={carBrand.id}>
                             <Card className={classes.card}>
                                 <Box className={classes.cardHeader}>
-                                    <MoreMenu title='Update Car Brand' data={carBrand} handleRemove={handleRemove} carBrand={carBrand}/>
+                                    <MoreMenu title='Update Car Brand' data={carBrand} carBrand={carBrand}/>
                                 </Box>
                                 <Box className={classes.cardContent}>
                                     <img src={carBrand.url} alt="brandLogo" style={{ maxHeight: 100, maxWidth: 150, objectFit: 'contain', margin: 10 }}/>
