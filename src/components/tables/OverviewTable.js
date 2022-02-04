@@ -80,16 +80,17 @@ const OverviewTable = ({ carVariantsArr, variantValue, colors, newVId }) => {
     // total interest = interest rate/100 x loan amount x loan period
     // installment = (loan amount + total interest) / (loan period x 12)
 
-    var price = carVariantsArr[variantValue].price.slice(
-      2,
-      carVariantsArr[variantValue].price.length
-    );
-    price = price.replace(/\,/g, "");
+    // var price = carVariantsArr[variantValue].price.slice(
+    //   2,
+    //   carVariantsArr[variantValue].price.length
+    // );
+    var price = carVariantsArr[variantValue].price.replace(/[^0-9]/g, '')
     price = parseInt(price, 10);
     let installment = (price + 0.03 * price * 9) / (9 * 12);
     installment = installment.toFixed(2).toLocaleString();
     installment = "RM " + installment;
     return installment;
+    
   };
 
   const handleTableRerender = (val) => {

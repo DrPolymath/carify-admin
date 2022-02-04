@@ -116,6 +116,13 @@ const Profile = (props) => {
     id: auth.uid,
   });
 
+  const getProfileImageUrl = () =>{
+    if (profile.url){
+      return profile.url
+    }
+    return "/user.png"
+  }
+
   if (!auth.uid) return <Redirect to="/signin" />;
   //Unauthorised user
   if (auth.uid && profile.authorised === false) return <Redirect to="/" />;
@@ -133,7 +140,7 @@ const Profile = (props) => {
                 <Avatar
                   className={classes.avatar}
                   alt="profilePic"
-                  src="/profile.png"
+                  src={getProfileImageUrl()}
                 />
               </Box>
             </Box>
@@ -143,9 +150,6 @@ const Profile = (props) => {
               <Typography variant="body1">Admin</Typography>
             </Box>
             <Box className={classes.logOutContainer}>
-              {/* <IconButton>
-                            
-                        </IconButton> */}
               <ExitToAppIcon
                 color="inherit"
                 fontSize="large"

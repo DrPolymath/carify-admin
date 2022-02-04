@@ -7,7 +7,8 @@ import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from "@material-ui/icons/Close";
 import Typography from "@material-ui/core/Typography";
 import FloatingActionBtn from "./FloatingActionBtn";
-import EditIcon from "@material-ui/icons/Edit";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { Button, Link } from "@material-ui/core";
 import AddCarBrand from "./forms/AddCarBrand";
 import UpdateCarBrand from "./forms/UpdateCarBrand";
@@ -42,6 +43,8 @@ import ApproveRequest from "./forms/ApproveRequest";
 import EnableAccount from "./forms/EnableAccount";
 import DisableAccount from "./forms/DisableAccount";
 import RejectRequest from "./forms/RejectRequest";
+import DeleteCarType from "./forms/DeleteCarType";
+import UpdateCarVariantWithColor from "./forms/UpdateCarVariantWithColor";
 
 const styles = (theme) => ({
   root: {
@@ -116,6 +119,10 @@ const FormDialog = (props) => {
     enable,
     disable,
     deactivate,
+    colors,
+    detailSummary,
+    deleteIcon,
+    editIcon,
   } = props;
   const [open, setOpen] = React.useState(false);
 
@@ -152,6 +159,13 @@ const FormDialog = (props) => {
           </Button>
         );
       }
+    } else if (detailSummary){
+      if(deleteIcon){
+        return <DeleteOutlinedIcon sx={{ fontSize: 40 }} onClick={handleClickOpen} />
+      } else if (editIcon){
+        return <EditOutlinedIcon sx={{ fontSize: 40 }} onClick={handleClickOpen}/>
+      }
+
     } else if (chip) {
       return (
         <Chip
@@ -225,20 +239,33 @@ const FormDialog = (props) => {
           {title === "Update Car Brand" ? (
             <UpdateCarBrand
               carBrand={carBrand}
-              handleClose={handleCloseMoreMenu}
+              handleClose={handleClose}
+              handleCloseMoreMenu={handleCloseMoreMenu}
             />
           ) : null}
           {title === "Delete Car Brand" ? (
-            <DeleteCarBrand
+            <deleteCarBrand
               carBrand={carBrand}
-              handleClose={handleCloseMoreMenu}
+              handleClose={handleClose}
+              handleCloseMoreMenu={handleCloseMoreMenu}
             />
           ) : null}
           {title === "New Car Type" ? (
             <AddCarType handleClose={handleClose} />
           ) : null}
           {title === "Update Car Type" ? (
-            <UpdateCarType carType={carType} handleClose={handleClose} />
+            <UpdateCarType
+              carType={carType}
+              handleClose={handleClose}
+              handleCloseMoreMenu={handleCloseMoreMenu}
+            />
+          ) : null}
+          {title === "Delete Car Type" ? (
+            <DeleteCarType
+              carType={carType}
+              handleClose={handleClose}
+              handleCloseMoreMenu={handleCloseMoreMenu}
+            />
           ) : null}
           {title === "New Price Range" ? (
             <CreatePriceRange handleClose={handleClose} />
@@ -291,6 +318,15 @@ const FormDialog = (props) => {
           {title === "Update Car Variant" ? (
             <UpdateCarVariant
               carVariant={carVariant}
+              priceRanges={priceRanges}
+              handleClose={handleClose}
+              handleRerender={handleRerender}
+            />
+          ) : null}
+          {title === "Edit Car Variant" ? (
+            <UpdateCarVariantWithColor
+              carVariant={carVariant}
+              colors={colors}
               priceRanges={priceRanges}
               handleClose={handleClose}
               handleRerender={handleRerender}

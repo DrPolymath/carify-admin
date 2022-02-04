@@ -44,6 +44,7 @@ const UpdateCarBrand = (props) => {
     if (image === "") {
       props.updateCarBrand(carBrand, carBrand.url);
       props.handleClose();
+      props.handleCloseMoreMenu();
     } else {
       const uploadTask = storage
         .ref("images/brandLogo/" + image.name)
@@ -94,7 +95,6 @@ const UpdateCarBrand = (props) => {
 
     const objectUrl = URL.createObjectURL(image);
     setPreview(objectUrl);
-
     // free memory when ever this component is unmounted
     return () => URL.revokeObjectURL(objectUrl);
   }, [image]);

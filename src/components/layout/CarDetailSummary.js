@@ -11,9 +11,8 @@ import {
   CircularProgress,
 } from "@material-ui/core";
 import React from "react";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { Stack } from "@mui/material";
+import FormDialog from "../FormDialog";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -107,6 +106,7 @@ const CarDetailSummary = ({
   handleChangeVariant,
   variantValue,
   colors,
+  priceRanges,
   newVId,
 }) => {
   const classes = useStyles();
@@ -233,10 +233,24 @@ const CarDetailSummary = ({
 
         <Grid item xs={1} md={1}>
           <Box component="div" className={classes.buttonContainer}>
-            <DeleteOutlinedIcon sx={{ fontSize: 40 }} />
+            {console.log(colors)}
+            <FormDialog
+              carVariant={carVariantsArr[variantValue]}
+              colors={color}
+              detailSummary="yes"
+              deleteIcon="yes"
+              title="Delete Car Variant"
+            />
           </Box>
           <Box component="div" className={classes.buttonContainer}>
-            <EditOutlinedIcon sx={{ fontSize: 40 }} />
+            <FormDialog
+              carVariant={carVariantsArr[variantValue]}
+              colors={color}
+              detailSummary="yes"
+              editIcon="yes"
+              title="Edit Car Variant"
+              priceRanges={priceRanges}
+            />
           </Box>
         </Grid>
       </Grid>

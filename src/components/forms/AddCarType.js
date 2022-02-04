@@ -81,14 +81,12 @@ const AddCarType = (props) => {
 
     const handleImgChange = (e) => {
         if (!e.target.files || e.target.files.length === 0) {
-            // setImage(undefined)
             setCarType({
                 ...carType,
                 image: undefined
             })
             return
         }
-        // setImage(e.target.files[0])
         setCarType({
             ...carType,
             [e.target.id]: e.target.files[0]

@@ -14,6 +14,9 @@ export const addCarVariant = (carVariant, cbId) => {
         prId: carVariant.prId,
         price: carVariant.price,
         priceRange: carVariant.priceRange,
+        maleClick: 0,
+        femaleClick: 0,
+        totalClick: 0,
       })
       .then(function (docRef) {
         let temp = Object.entries(carVariant.colorList).map((key) => ({
@@ -62,6 +65,42 @@ export const addCarVariant = (carVariant, cbId) => {
           err,
         });
       });
+  };
+};
+
+export const updateCarVariantColor = (colorList, carVariant) => {
+  return (dispatch, getState, { getFirebase }) => {
+    const firestore = getFirebase().firestore();
+    colorList.map((color) => {
+      firestore
+        .collection("carBrand")
+        .doc(carVariant.cbId)
+        .collection("carModel")
+        .doc(carVariant.cmId)
+        .collection("carVariant")
+        .doc(carVariant.id)
+        .collection("colors")
+        .doc(color.id)
+        .set(
+          {
+            colorName: color.colorName,
+            colorCode: color.colorCode,
+          },
+          { merge: true }
+        )
+        .then(() => {
+          dispatch({
+            type: "UPDATE_CAR_VARIANT_COLOR",
+            carVariant,
+          });
+        })
+        .catch((err) => {
+          dispatch({
+            type: "UPDATE_CAR_VARIANT_COLOR_ERR",
+            err,
+          });
+        });
+    });
   };
 };
 

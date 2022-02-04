@@ -21,13 +21,18 @@ const useStyles = makeStyles((theme) => {
       display: "flex",
       justifyContent: "flex-end",
     },
+    input: {
+      display: "none",
+    },
     imageInputContainer: {
-      display: "inline",
+      display: "flex",
       flexDirection: "column",
       alignItems: "center",
     },
-    input: {
-      display: "none",
+    chooseImgBtnContainer: {
+      display: "flex",
+      justifyContent: "center",
+      padding: theme.spacing(2),
     },
     formField: {
       display: "inline",
@@ -49,6 +54,7 @@ const UpdateProfile = (props) => {
 
   const [profile, setProfile] = React.useState(props.profileInfo);
   const [profilePicture, setProfilePicture] = React.useState(null);
+  const [preview, setPreview] = React.useState(undefined);
   const [role, setRole] = React.useState("");
 
   const roleList = [
@@ -62,6 +68,14 @@ const UpdateProfile = (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    //upload image
+    // if no image if image dont change
+    //  dont upload or delete
+    // else if image change
+    // delete and upload
+    // create storage directory 
+
     props.updateProfile(profile, role);
     props.handleClose();
   };
@@ -87,27 +101,25 @@ const UpdateProfile = (props) => {
     }
   }, [profile]);
 
-  // React.useEffect(() => {
-  //   if (role === "Super Admin" && !profile.superAdmin) {
-  //     setProfile({ ...profile, superAdmin: true });
-  //   } else if (role === "Admin" && profile.superAdmin) {
-  //     setProfile({ ...profile, superAdmin: false });
-  //   }
-  // }, [role]);
-
-  const handleImgChange = (e) => {
-    if (!e.target.files) {
-      // setImage(undefined)
-      setProfilePicture({
-        profilePicture: undefined,
-      });
+  React.useEffect(() => {
+    if (!profilePicture) {
+      setPreview(undefined);
       return;
     }
-    // setImage(e.target.files[0])
-    console.log("img set");
-    setProfilePicture({
-      profilePicture: e.target.files[0],
-    });
+
+    const objectUrl = URL.createObjectURL(profilePicture);
+    setPreview(objectUrl);
+
+    // free memory when ever this component is unmounted
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [profilePicture]);
+
+  const handleImgChange = (e) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      setProfilePicture(undefined);
+      return;
+    }
+    setProfilePicture(e.target.files[0]);
   };
 
   return (
@@ -119,21 +131,23 @@ const UpdateProfile = (props) => {
     >
       {console.log(profile)}
       <Box className={classes.formField}>
-        <input
-          accept="image/*"
-          className={classes.input}
-          id="image"
-          multiple
-          type="file"
-          onChange={handleImgChange}
-        />
-        <label htmlFor="image" className={classes.chooseImgBtnContainer}>
-          {profilePicture ? (
-            <img src={profilePicture} alt="profilePicture" width="150" />
-          ) : (
-            <img src="/TU.png" alt="defaultProfilePicture" />
-          )}
-        </label>
+        <Box className={classes.imageInputContainer}>
+          <input
+            accept="image/*"
+            className={classes.input}
+            id="image"
+            multiple
+            type="file"
+            onChange={handleImgChange}
+          />
+          <label htmlFor="image" className={classes.chooseImgBtnContainer}>
+            {profilePicture ? (
+              <img src={preview} alt="profilePicture" width="150" />
+            ) : (
+              <img src="/TU.png" alt="defaultProfilePicture" />
+            )}
+          </label>
+        </Box>
         <TextField
           name="username"
           type="text"
@@ -244,10 +258,6 @@ const UpdateProfile = (props) => {
           Save
         </Button>
       </Box>
-
-      {/* <div className="red-text center">
-                { authError ? <p>{ authError }</p> : null }
-            </div> */}
     </form>
   );
 };

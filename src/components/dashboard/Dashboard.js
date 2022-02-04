@@ -6,8 +6,11 @@ import {
   Typography,
   Box,
   Button,
+  Tooltip,
 } from "@material-ui/core";
+import { compose } from "redux";
 import { connect } from "react-redux";
+import { firestoreConnect } from "react-redux-firebase";
 import { Redirect } from "react-router-dom";
 import Drawer from "../layout/Drawer";
 import BarChart from "../charts/BarChart";
@@ -33,7 +36,7 @@ const useStyles = makeStyles((theme) => ({
     background: theme.palette.primary.main,
   },
   gridContainer: {
-    padding: theme.spacing(3),
+    padding: theme.spacing(2),
     justifyContent: "space-between",
   },
   upperTitle: {
@@ -107,19 +110,133 @@ const useStyles = makeStyles((theme) => ({
 
 const Dashboard = (props) => {
   const classes = useStyles();
-  const { auth, profile, signOut } = props;
+  const { auth, profile, signOut, users, carVariants, carBrands, carModels } =
+    props;
   const [isAuthorised, setIsAuthorised] = React.useState(null);
+  const [carVariantsArr, setCarVariantsArr] = React.useState();
+  const [usersArr, setUsersArr] = React.useState();
+  const [groupByModelArr, setGroupByModelArr] = React.useState([]);
+  const [groupByBrandArr, setGroupByBrandArr] = React.useState([]);
+
+  React.useEffect(() => {
+    if (carBrands && carModels && carVariants) {
+      let carModelsArr = Object.entries(carModels).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
+
+      let temp = Object.entries(carVariants)
+        .map((key) => ({
+          ...key[1],
+          id: key[0],
+        }))
+        .map((item) => {
+          return {
+            ...item,
+            carBrandName: carBrands.find(
+              (o) => o.id === carModelsArr.find((o) => o.id === item.cmId).cbId
+            ).carBrandName,
+            cbId: carBrands.find(
+              (o) => o.id === carModelsArr.find((o) => o.id === item.cmId).cbId
+            ).id,
+            carModelName: carModelsArr.find((o) => o.id === item.cmId)
+              .carModelName,
+            bodyType: carModelsArr.find((o) => o.id === item.cmId).bodyType,
+            url: carModelsArr.find((o) => o.id === item.cmId).url,
+          };
+        })
+        .sort(function (a, b) {
+          return b.totalClick - a.totalClick;
+        });
+      setCarVariantsArr(temp);
+    }
+    if (users) {
+      let temp = Object.entries(users).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
+      setUsersArr(temp);
+    }
+  }, [carModels, carVariants, users]);
+
+  React.useEffect(() => {
+    if (carVariantsArr) {
+      groupByModel();
+      groupByBrand();
+    }
+  }, [carVariantsArr]);
+
+  const groupByModel = () => {
+    var result = [];
+    carVariantsArr.reduce(function (res, value) {
+      if (!res[value.carModelName]) {
+        res[value.carModelName] = {
+          carBrandName: value.carBrandName,
+          carModelName: value.carModelName,
+          totalClick: 0,
+          maleClick: 0,
+          femaleClick: 0,
+          cmId: value.cmId,
+          url: value.url,
+        };
+        result.push(res[value.carModelName]);
+      }
+      res[value.carModelName].totalClick += value.totalClick;
+      res[value.carModelName].maleClick += value.maleClick;
+      res[value.carModelName].femaleClick += value.femaleClick;
+      return res;
+    }, {});
+
+    result = result.sort(function (a, b) {
+      return b.totalClick - a.totalClick;
+    });
+    setGroupByModelArr(result);
+  };
+
+  const groupByBrand = () => {
+    var result = [];
+    carVariantsArr.reduce(function (res, value) {
+      if (!res[value.carBrandName]) {
+        res[value.carBrandName] = {
+          carBrandName: value.carBrandName,
+          totalClick: 0,
+          maleClick: 0,
+          femaleClick: 0,
+          cbId: value.cbId,
+        };
+        result.push(res[value.carBrandName]);
+      }
+      res[value.carBrandName].totalClick += value.totalClick;
+      res[value.carBrandName].maleClick += value.maleClick;
+      res[value.carBrandName].femaleClick += value.femaleClick;
+      return res;
+    }, {});
+
+    result = result
+      .sort(function (a, b) {
+        return b.totalClick - a.totalClick;
+      })
+      .map((item) => {
+        return {
+          ...item,
+          cbUrl: carBrands.find((o) => o.id === item.cbId).url,
+        };
+      });
+
+    setGroupByBrandArr(result);
+  };
+
   const view = () => {
     if (isAuthorised === null) {
       return (
         <div className={classes.root}>
-        <Drawer />
-        <div className={classes.page}>
-          <Box className={classes.loadingcontainer}>
-            <CircularProgress />
-          </Box>
+          <Drawer />
+          <div className={classes.page}>
+            <Box className={classes.loadingcontainer}>
+              <CircularProgress />
+            </Box>
+          </div>
         </div>
-      </div>
       );
     } else if (isAuthorised === true || isAuthorised === false) {
       if (!isAuthorised) {
@@ -162,148 +279,175 @@ const Dashboard = (props) => {
           </div>
         );
       } else if (isAuthorised) {
-        return (
-          <div className={classes.root}>
-            <Drawer />
-            <div className={classes.page}>
-              <Grid container>
-                <Grid
-                  className={classes.upperContent}
-                  item
-                  sm={6}
-                  md={4}
-                  lg={3}
-                >
-                  <Card className={classes.cardContainer}>
-                    <Grid container className={classes.gridContainer}>
-                      <Grid item md={7}>
-                        <Typography className={classes.upperTitle} variant="h6">
-                          Most Favorite Car
-                        </Typography>
+        if (
+          usersArr &&
+          carVariantsArr &&
+          carBrands &&
+          carModels &&
+          carVariants &&
+          groupByBrandArr[0] &&
+          groupByModelArr[0]
+        ) {
+          return (
+            <div className={classes.root}>
+              <Drawer />
+              <div className={classes.page}>
+                <Grid container>
+                  <Grid className={classes.upperContent} item md={6} lg={3}>
+                    <Card className={classes.cardContainer}>
+                      <Grid container className={classes.gridContainer}>
+                        <Grid item md={7}>
+                          <Typography
+                            className={classes.upperTitle}
+                            variant="h6"
+                          >
+                            Most Favorite Car
+                          </Typography>
+                        </Grid>
+                        <Grid item md={5}>
+                          <Box className={classes.mfcContainer}>
+                            <Tooltip title={groupByModelArr[0].carBrandName + " " + groupByModelArr[0].carModelName} placement="bottom">
+                              <img
+                                src={groupByModelArr[0].url}
+                                alt="MFC"
+                                height="100%"
+                              />
+                            </Tooltip>
+                          </Box>
+                        </Grid>
                       </Grid>
-                      <Grid item md={5}>
-                        <Box className={classes.mfcContainer}>
-                          <img src="/MFC.png" alt="MFC" height="100%" />
-                        </Box>
+                    </Card>
+                  </Grid>
+                  <Grid className={classes.upperContent} item md={6} lg={3}>
+                    <Card className={classes.cardContainer}>
+                      <Grid container className={classes.gridContainer}>
+                        <Grid item md={7}>
+                          <Typography
+                            className={classes.upperTitle}
+                            variant="h6"
+                          >
+                            Most Favorite Brand
+                          </Typography>
+                        </Grid>
+                        <Grid item md={5}>
+                          <Box className={classes.mfcContainer}>
+                            <Tooltip
+                              title={groupByBrandArr[0].carBrandName}
+                              placement="bottom"
+                            >
+                              <img
+                                src={groupByBrandArr[0].cbUrl}
+                                alt="MFB"
+                                height="100%"
+                              />
+                            </Tooltip>
+                          </Box>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </Card>
-                </Grid>
-                <Grid
-                  className={classes.upperContent}
-                  item
-                  sm={6}
-                  md={4}
-                  lg={3}
-                >
-                  <Card className={classes.cardContainer}>
-                    <Grid container className={classes.gridContainer}>
-                      <Grid item md={7}>
-                        <Typography className={classes.upperTitle} variant="h6">
-                          Most Favorite Brand
-                        </Typography>
+                    </Card>
+                  </Grid>
+                  <Grid className={classes.upperContent} item md={6} lg={3}>
+                    <Card className={classes.cardContainer}>
+                      <Grid container className={classes.gridContainer}>
+                        <Grid item md={7}>
+                          <Typography
+                            className={classes.upperTitle}
+                            variant="h5"
+                          >
+                            {usersArr.length}
+                          </Typography>
+                          <Typography
+                            className={classes.upperTitle}
+                            variant="h6"
+                          >
+                            Total Users
+                          </Typography>
+                        </Grid>
+                        <Grid item md={5}>
+                          <Box className={classes.mfcContainer}>
+                            <img src="/TU.png" alt="TU" height="100%" />
+                          </Box>
+                        </Grid>
                       </Grid>
-                      <Grid item md={5}>
-                        <Box className={classes.mfcContainer}>
-                          <img src="/honda.png" alt="MFB" height="100%" />
-                        </Box>
+                    </Card>
+                  </Grid>
+                  <Grid className={classes.upperContent} item md={6} lg={3}>
+                    <Card className={classes.cardContainer}>
+                      <Grid container className={classes.gridContainer}>
+                        <Grid item md={7}>
+                          <Typography
+                            className={classes.upperTitle}
+                            variant="h5"
+                          >
+                            {carVariantsArr.length}
+                          </Typography>
+                          <Typography
+                            className={classes.upperTitle}
+                            variant="h6"
+                          >
+                            Total Cars
+                          </Typography>
+                        </Grid>
+                        <Grid item md={5}>
+                          <Box className={classes.mfcContainer}>
+                            <img src="/hatchback.png" alt="TC" height="100%" />
+                          </Box>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </Card>
-                </Grid>
-                <Grid
-                  className={classes.upperContent}
-                  item
-                  sm={6}
-                  md={4}
-                  lg={3}
-                >
-                  <Card className={classes.cardContainer}>
-                    <Grid container className={classes.gridContainer}>
-                      <Grid item md={7}>
-                        <Typography className={classes.upperTitle} variant="h5">
-                          153
-                        </Typography>
-                        <Typography className={classes.upperTitle} variant="h6">
-                          Total Users
-                        </Typography>
-                      </Grid>
-                      <Grid item md={5}>
-                        <Box className={classes.mfcContainer}>
-                          <img src="/TU.png" alt="TU" height="100%" />
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </Card>
-                </Grid>
-                <Grid
-                  className={classes.upperContent}
-                  item
-                  sm={6}
-                  md={4}
-                  lg={3}
-                >
-                  <Card className={classes.cardContainer}>
-                    <Grid container className={classes.gridContainer}>
-                      <Grid item md={7}>
-                        <Typography className={classes.upperTitle} variant="h5">
-                          33
-                        </Typography>
-                        <Typography className={classes.upperTitle} variant="h6">
-                          Total Cars
-                        </Typography>
-                      </Grid>
-                      <Grid item md={5}>
-                        <Box className={classes.mfcContainer}>
-                          <img src="/hatchback.png" alt="TC" height="100%" />
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </Card>
-                </Grid>
-              </Grid>
-              <Grid container className={classes.container}>
-                <Grid className={classes.lowerContent} item md={9}>
-                  <Grid style={{ height: "100%" }}>
-                    <Card
-                      style={{ height: "100%" }}
-                      className={classes.chartCard}
-                    >
-                      <Typography className={classes.lowerTitle} variant="h4">
-                        Top Favorite Car
-                      </Typography>
-                      <BarChart />
                     </Card>
                   </Grid>
                 </Grid>
-                <Grid className={classes.lowerContent} item md={3}>
-                  <Grid container spacing={3} style={{ height: "100%" }}>
-                    <Grid item md={12}>
-                      <Card className={classes.chartCard}>
+                <Grid container>
+                  <Grid className={classes.lowerContent} item md={8}>
+                    <Grid style={{ height: "100%" }}>
+                      <Card
+                        style={{ height: "100%" }}
+                        className={classes.chartCard}
+                      >
+                        <Typography className={classes.lowerTitle} variant="h4">
+                          Top Favorite Car
+                        </Typography>
+                        <BarChart carModel={groupByModelArr}/>
+                      </Card>
+                    </Grid>
+                  </Grid>
+                  <Grid className={classes.lowerContent} item md={4}>
+                    <Grid style={{ height: "100%" }}>
+                      <Card
+                        style={{ height: "100%" }}
+                        className={classes.chartCard}
+                      >
                         <Typography className={classes.lowerTitle} variant="h6">
                           Top Favorite Brand
                         </Typography>
-                        {/* <Grid container>
-                                        <Grid item md={12}>
-                                            <PieChart />
-                                        </Grid>
-                                    </Grid> */}
-                        <PieChart />
-                      </Card>
-                    </Grid>
-                    <Grid item md={12}>
-                      <Card className={classes.chartCard}>
-                        <Typography className={classes.lowerTitle} variant="h6">
-                          Salary Based Favorite Car
-                        </Typography>
+                        <PieChart carBrand={groupByBrandArr}/>
                       </Card>
                     </Grid>
                   </Grid>
                 </Grid>
-              </Grid>
+              </div>
             </div>
-          </div>
-        );
+          );
+        } else {
+          return (
+            <div className={classes.root}>
+              <Drawer />
+              <div className={classes.pageRoot}>
+                <Typography
+                  className={classes.title}
+                  color="primary"
+                  variant="h3"
+                >
+                </Typography>
+                <div className={classes.page}>
+                  <Box className={classes.loadingcontainer}>
+                    <CircularProgress />
+                  </Box>
+                </div>
+              </div>
+            </div>
+          );
+        }
       }
     }
   };
@@ -332,6 +476,10 @@ const mapStateToProps = (state) => {
   return {
     auth: state.firebase.auth,
     profile: state.firebase.profile,
+    carVariants: state.firestore.data.carVariant,
+    carBrands: state.firestore.ordered.carBrand,
+    carModels: state.firestore.data.carModel,
+    users: state.firestore.data.users,
   };
 };
 
@@ -341,4 +489,20 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Dashboard);
+export default compose(
+  connect(mapStateToProps, mapDispatchToProps),
+  firestoreConnect([
+    {
+      collection: "users",
+    },
+    {
+      collection: "carBrand",
+    },
+    {
+      collectionGroup: "carModel",
+    },
+    {
+      collectionGroup: "carVariant",
+    },
+  ])
+)(Dashboard);

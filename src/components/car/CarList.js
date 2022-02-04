@@ -7,7 +7,7 @@ import { compose } from "redux";
 import { connect } from "react-redux";
 import { firestoreConnect } from "react-redux-firebase";
 // import { useFirestore } from 'react-redux-firebase'
-import { useFirestoreConnect } from 'react-redux-firebase'
+import { useFirestoreConnect } from "react-redux-firebase";
 import CarVariantTable from "../tables/CarVariantTable";
 import FilterCard from "../cards/FilterCard";
 import FormDialog from "../FormDialog";
@@ -48,9 +48,31 @@ const CarList = (props) => {
   const [carVariantsArr, setCarVariantsArr] = React.useState();
   const [carModelsArr, setCarModelsArr] = React.useState();
   const [priceRangesArr, setPriceRangesArr] = React.useState();
+  const [filterResult, setFilterResult] = React.useState();
+
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const filterSearch = (carVariantsArr, query) => {
+    if (query === "") {
+      return carVariantsArr;
+    }
+
+    return carVariantsArr.filter((item) => {
+      var lowerCased = item.list.toLowerCase();
+      return lowerCased.includes(query);
+    });
+  };
+  const filteredSearch = filterSearch(carVariantsArr, searchQuery);
+
+  React.useEffect(() => {
+    setFilterResult(filteredSearch);
+  }, [searchQuery]);
 
   const handleFilter = (carBrand) => {
-    setBrandFilter(carBrand.carBrandName);
+    if (brandFilter === carBrand.carBrandName) {
+      setBrandFilter("");
+    } else {
+      setBrandFilter(carBrand.carBrandName);
+    }
   };
 
   const handleRerender = (val) => {
@@ -64,18 +86,6 @@ const CarList = (props) => {
   ]);
 
   React.useEffect(() => {
-    // console.log("carBrands")
-    // console.log(carBrands)
-    console.log("carModels");
-    console.log(carModels);
-    console.log("carVariants");
-    console.log(carVariants);
-    // console.log("carTypes")
-    // console.log(carTypes)
-    // console.log("priceRanges")
-    // console.log(priceRanges)
-    // console.log("profile")
-    // console.log(profile)
     if (carBrands && carModels && carVariants && carTypes && priceRanges) {
       let priceRangesArrTemp = Object.entries(priceRanges).map((key) => ({
         ...key[1],
@@ -124,6 +134,22 @@ const CarList = (props) => {
         };
       });
 
+      carVariantsArrTemp = carVariantsArrTemp.map((item) => {
+        return {
+          ...item,
+          list:
+            item.carBrandName +
+            " " +
+            item.carModelName +
+            " " +
+            item.carVariantName +
+            " " +
+            item.bodyType +
+            " " +
+            item.price,
+        };
+      });
+
       if (brandFilter !== "") {
         carVariantsArrTemp = carVariantsArrTemp.filter(
           (carVariant) => carVariant.carBrandName === brandFilter
@@ -132,13 +158,9 @@ const CarList = (props) => {
       setPriceRangesArr(priceRangesArrTemp);
       setCarModelsArr(carModelsArrTemp);
       setCarVariantsArr(carVariantsArrTemp);
+      setFilterResult(carVariantsArrTemp);
     }
-  }, [carBrands, carModels, carVariants, carTypes, priceRanges]);
-
-  React.useEffect(() => {
-    console.log("carVariants");
-    console.log(carVariants);
-  }, [carVariants]);
+  }, [carBrands, carModels, carVariants, carTypes, priceRanges, brandFilter]);
 
   //Route securing
   if (!auth.uid) return <Redirect to="/signin" />;
@@ -151,12 +173,16 @@ const CarList = (props) => {
       <div className={classes.root}>
         <Drawer />
         <div className={classes.page}>
-          <Search />
+          <Search
+            carVariantsArr={carVariantsArr}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
           <div>
             <FilterCard carBrands={carBrands} handleFilter={handleFilter} />
           </div>
           <CarVariantTable
-            carVariants={carVariantsArr}
+            carVariants={filterResult}
             priceRanges={priceRangesArr}
             handleRerender={handleRerender}
           />
@@ -185,7 +211,7 @@ const CarList = (props) => {
 };
 
 const mapStateToProps = (state) => {
-  console.log(state);
+  console.log(state)
   return {
     auth: state.firebase.auth,
     carBrands: state.firestore.ordered.carBrand,
@@ -210,17 +236,9 @@ export default compose(
       collection: "carType",
     },
     {
-      // collection: "carBrand",
       collectionGroup: "carModel",
     },
     {
-      // collection: "carBrand",
-      // subcollections: {
-      //   collection: "carModel",
-      //   subcollections: {
-      //     collection: "carVariant",
-      //   },
-      // },
       collectionGroup: "carVariant",
     },
   ])

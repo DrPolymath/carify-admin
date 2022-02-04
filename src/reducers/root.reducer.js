@@ -13,6 +13,7 @@ import carPhotoReducer from "./carPhoto.reducer";
 import engineDetailReducer from "./engineDetail.reducer";
 import performanceDetailReducer from "./performanceDetail.reducer";
 import transmissionDetailReducer from "./transmissionDetail.reducer";
+import userReducer from "./user.reducer";
 
 const rootReducer = combineReducers({
     auth: authReducer,
@@ -26,6 +27,7 @@ const rootReducer = combineReducers({
     photo: carPhotoReducer,
     engine: engineDetailReducer,
     performance: performanceDetailReducer,
+    user: userReducer,
     transmission: transmissionDetailReducer,
     firestore: firestoreReducer,
     firebase: firebaseReducer

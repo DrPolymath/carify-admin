@@ -76,14 +76,14 @@ const MoreMenu = ({ title, data, handleRemove, carBrand, carType }) => {
                             {carBrand ? (
                                 <FormDialog title={title} carBrand={carBrand} update='yes' moreMenu="yes" handleCloseMoreMenu={handleToggle}/>
                             ) : (
-                                <FormDialog title={title} carType={carType} update='yes' moreMenu="yes"/>
+                                <FormDialog title={title} carType={carType} update='yes' moreMenu="yes"  handleCloseMoreMenu={handleToggle}/>
                             )}
                         </MenuItem>
                         <MenuItem>
                             {carBrand ? (
                                 <FormDialog title="Delete Car Brand" carBrand={carBrand} toDelete="yes" moreMenu="yes" handleCloseMoreMenu={handleToggle}/>
                             ) : (
-                                <FormDialog title="Delete Car Type" carType={carType} toDelete="yes" moreMenu="yes"/>
+                                <FormDialog title="Delete Car Type" carType={carType} toDelete="yes" moreMenu="yes"  handleCloseMoreMenu={handleToggle}/>
                             )}
                         </MenuItem>
                     </MenuList>

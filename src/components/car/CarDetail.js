@@ -72,12 +72,14 @@ const CarDetail = (props) => {
     performances,
     transmissions,
     colors,
+    priceRanges,
     profile,
   } = props;
 
   const [tabValue, setTabValue] = React.useState(0);
   const [variantValue, setVariantValue] = React.useState(0);
   const [carVariantsArr, setCarVariantsArr] = React.useState();
+  const [priceRangesArr, setPriceRangesArr] = React.useState();
   const [newVId, setNewVId] = React.useState(vId);
 
   const handleChangeVariant = (event, newValue) => {
@@ -151,7 +153,12 @@ const CarDetail = (props) => {
   }, [tabValue]);
 
   React.useEffect(() => {
-    if (carBrands && carModels && carVariants) {
+    if (carBrands && carModels && carVariants && priceRanges) {
+      let priceRangesArrTemp = Object.entries(priceRanges).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
+
       let carModelsArr = Object.entries(carModels).map((key) => ({
         ...key[1],
         id: key[0],
@@ -178,16 +185,17 @@ const CarDetail = (props) => {
           };
         })
         .filter((carVariant) => carVariant.cmId === cmId);
+        setPriceRangesArr(priceRangesArrTemp);
       setCarVariantsArr(temp);
     }
-  }, [carModels, carVariants]);
+  }, [carModels, carVariants, priceRanges]);
 
   //Route securing
   if (!auth.uid) return <Redirect to="/signin" />;
   //Unauthorised user
   if (auth.uid && profile.authorised === false) return <Redirect to="/" />;
 
-  if (carVariantsArr) {
+  if (carVariantsArr && priceRanges) {
     return (
       <div className={classes.root}>
         <Drawer />
@@ -201,6 +209,7 @@ const CarDetail = (props) => {
               handleChangeVariant={handleChangeVariant}
               colors={colors}
               variantValue={variantValue}
+              priceRanges={priceRangesArr}
               newVId={newVId}
             />
             <Divider />
@@ -264,6 +273,7 @@ const mapStateToProps = (state, ownProps) => {
     cmId: cmId,
     vId: vId,
     profile: state.firebase.profile,
+    priceRanges: state.firestore.data.priceRange,
   };
 };
 
