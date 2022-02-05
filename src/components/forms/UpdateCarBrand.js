@@ -1,5 +1,11 @@
 import React from "react";
-import { Box, Button, makeStyles, TextField } from "@material-ui/core";
+import {
+  Box,
+  Button,
+  makeStyles,
+  TextField,
+  Typography,
+} from "@material-ui/core";
 import { connect } from "react-redux";
 import { updateCarBrand } from "../../actions/carBrand.actions";
 import { storage } from "../../config/fbConfig";
@@ -29,6 +35,10 @@ const useStyles = makeStyles((theme) => {
       justifyContent: "center",
       padding: theme.spacing(2),
     },
+    helperText: {
+      paddingLeft: theme.spacing(1.5),
+      color: "#FF0000",
+    },
   };
 });
 
@@ -38,39 +48,61 @@ const UpdateCarBrand = (props) => {
   const [carBrand, setCarBrand] = React.useState(props.carBrand);
   const [image, setImage] = React.useState("");
   const [preview, setPreview] = React.useState(undefined);
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (image === "") {
-      props.updateCarBrand(carBrand, carBrand.url);
-      props.handleClose();
-      props.handleCloseMoreMenu();
-    } else {
-      const uploadTask = storage
-        .ref("images/brandLogo/" + image.name)
-        .put(image);
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {},
-        (error) => {
-          console.log(error);
-        },
-        () => {
-          uploadTask.snapshot.ref
-            .getDownloadURL()
-            .then((url) => {
-              props.updateCarBrand(carBrand, url);
-            })
-            .then(() => {
-              var fileRef = storage.refFromURL(carBrand.url);
-              fileRef.delete().then(() => {
-                props.handleClose();
-              });
-            });
-        }
-      );
-    }
+    validate();
   };
+
+  React.useEffect(() => {
+    console.log(errors);
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      if (image === "") {
+        props.updateCarBrand(carBrand, carBrand.url);
+        props.handleClose();
+        props.handleCloseMoreMenu();
+      } else {
+        const uploadTask = storage
+          .ref("images/brandLogo/" + image.name)
+          .put(image);
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {},
+          (error) => {
+            console.log(error);
+          },
+          () => {
+            uploadTask.snapshot.ref
+              .getDownloadURL()
+              .then((url) => {
+                props.updateCarBrand(carBrand, url);
+              })
+              .then(() => {
+                var fileRef = storage.refFromURL(carBrand.url);
+                fileRef.delete().then(() => {
+                  props.handleClose();
+                });
+              });
+          }
+        );
+      }
+    }
+  }, [validated]);
 
   const handleChange = (e) => {
     setCarBrand({
@@ -99,6 +131,31 @@ const UpdateCarBrand = (props) => {
     return () => URL.revokeObjectURL(objectUrl);
   }, [image]);
 
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.carBrandName =
+      carBrand.carBrandName === "" ? "Brand name is required" : "";
+    temp.image =
+      carBrand.image === null || undefined ? "Brand logo is required" : "";
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+  };
+
   return (
     <form
       id="updateCarBrandForm"
@@ -117,7 +174,8 @@ const UpdateCarBrand = (props) => {
         color="secondary"
         fullWidth
         required
-        // error={titleError}
+        error={errorFlags[0]}
+        helperText={errors.carBrandName}
       />
 
       <Box className={classes.imageInputContainer}>
@@ -137,6 +195,11 @@ const UpdateCarBrand = (props) => {
           )}
         </label>
       </Box>
+      {errorFlags[1] && (
+        <Typography variant="caption" className={classes.helperText}>
+          {errors.image}
+        </Typography>
+      )}
 
       <Box align="center" className={classes.buttonContainer}>
         <Button type="submit" color="primary" variant="contained">
@@ -153,7 +216,7 @@ const UpdateCarBrand = (props) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    updateCarBrand: (carBrand, url) => dispatch(updateCarBrand(carBrand,url)),
+    updateCarBrand: (carBrand, url) => dispatch(updateCarBrand(carBrand, url)),
   };
 };
 

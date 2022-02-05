@@ -4,6 +4,7 @@ import {
   makeStyles,
   MenuItem,
   TextField,
+  Typography,
 } from "@material-ui/core";
 import React from "react";
 import { connect } from "react-redux";
@@ -35,6 +36,10 @@ const useStyles = makeStyles((theme) => {
       justifyContent: "center",
       padding: theme.spacing(2),
     },
+    helperText: {
+      paddingLeft: theme.spacing(1.5),
+      color: "#FF0000",
+    },
   };
 });
 
@@ -50,9 +55,13 @@ const AddCarModel = ({
   const [carModelName, setCarModelName] = React.useState("");
   const [carBrandName, setCarBrandName] = React.useState("");
   const [cbId, setCbId] = React.useState("");
-  const [image, setImage] = React.useState("");
+  const [image, setImage] = React.useState(null);
   const [preview, setPreview] = React.useState(undefined);
   const [btId, setBtId] = React.useState("");
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
 
   const processedCarBrands = carBrands.map((item) => {
     return {
@@ -77,28 +86,7 @@ const AddCarModel = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const uploadTask = storage.ref("images/modelLogo/" + image.name).put(image);
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {},
-      (error) => {
-        console.log(error);
-      },
-      () => {
-        uploadTask.snapshot.ref.getDownloadURL().then((url) => {
-          let carModelWithUrl = {
-            carModelName: carModelName,
-            cbId: cbId,
-            btId: btId,
-            url: url,
-          };
-          addCarModel(carModelWithUrl, carBrandName);
-          handleClose();
-          handleRerender(cbId);
-        });
-      }
-    );
+    validate();
   };
 
   React.useEffect(() => {
@@ -110,10 +98,6 @@ const AddCarModel = ({
     carBrandsTemp = carBrandsTemp.filter((a) => a);
     setCarBrandName(carBrandsTemp[0]);
   }, [cbId]);
-
-  // React.useEffect(() => {
-  //   console.log(carBrandName);
-  // }, [carBrandName]);
 
   React.useEffect(() => {
     if (!image) {
@@ -128,6 +112,71 @@ const AddCarModel = ({
     return () => URL.revokeObjectURL(objectUrl);
   }, [image]);
 
+  React.useEffect(() => {
+    console.log(errors);
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      const uploadTask = storage
+        .ref("images/modelLogo/" + image.name)
+        .put(image);
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {},
+        (error) => {
+          console.log(error);
+        },
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then((url) => {
+            let carModelWithUrl = {
+              carModelName: carModelName,
+              cbId: cbId,
+              btId: btId,
+              url: url,
+            };
+            addCarModel(carModelWithUrl, carBrandName);
+            handleClose();
+            handleRerender(cbId);
+          });
+        }
+      );
+    }
+  }, [validated]);
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.cbId = cbId === "" ? "Brand is required" : "";
+    temp.carModelName = carModelName === "" ? "Model Name is required" : "";
+    temp.btId = btId === "" ? "Body Type is required" : "";
+    temp.image = image === null || undefined ? "Image is required" : "";
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+  };
+
   return (
     <form
       id="addCarModelForm"
@@ -135,7 +184,7 @@ const AddCarModel = ({
       autoComplete="off"
       onSubmit={handleSubmit}
     >
-    <TextField
+      <TextField
         id="carBrandName"
         select
         label="Brand Name"
@@ -144,6 +193,8 @@ const AddCarModel = ({
         className={classes.field}
         variant="outlined"
         required
+        error={errorFlags[0]}
+        helperText={errors.cbId}
       >
         {processedCarBrands.map((option) => (
           <MenuItem key={option.value} value={option.value}>
@@ -163,9 +214,10 @@ const AddCarModel = ({
         color="secondary"
         fullWidth
         required
-        // error={titleError}
+        error={errorFlags[1]}
+        helperText={errors.carModelName}
       />
-      
+
       <TextField
         id="carBrandName"
         select
@@ -175,6 +227,8 @@ const AddCarModel = ({
         className={classes.field}
         variant="outlined"
         required
+        error={errorFlags[2]}
+        helperText={errors.btId}
       >
         {processedCarTypes.map((option) => (
           <MenuItem key={option.value} value={option.value}>
@@ -200,6 +254,12 @@ const AddCarModel = ({
           )}
         </label>
       </Box>
+
+      {errorFlags[3] && (
+        <Typography variant="caption" className={classes.helperText}>
+          {errors.image}
+        </Typography>
+      )}
 
       <Box align="center" className={classes.buttonContainer}>
         <Button type="submit" color="primary" variant="contained">

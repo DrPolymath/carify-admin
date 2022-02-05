@@ -5,6 +5,7 @@ import {
   makeStyles,
   MenuItem,
   TextField,
+  Typography,
 } from "@material-ui/core";
 import { connect } from "react-redux";
 import { updateCarModel } from "../../actions/carModel.actions";
@@ -35,6 +36,10 @@ const useStyles = makeStyles((theme) => {
       justifyContent: "center",
       padding: theme.spacing(2),
     },
+    helperText: {
+      paddingLeft: theme.spacing(1.5),
+      color: "#FF0000",
+    },
   };
 });
 
@@ -44,6 +49,10 @@ const UpdateCarModel = (props) => {
   const [carType, setCarType] = useState(props.carModel.btId);
   const [image, setImage] = React.useState("");
   const [preview, setPreview] = React.useState(undefined);
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
 
   const processedCarTypes = props.carTypes.map((item) => {
     return {
@@ -51,41 +60,11 @@ const UpdateCarModel = (props) => {
       value: item.id,
     };
   });
-  console.log(carModel)
+  console.log(carModel);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (image === "") {
-      props.updateCarModel(carModel, carType, props.carModel.url);
-      props.handleClose();
-    } else {
-      const uploadTask = storage
-        .ref("images/modelLogo/" + image.name)
-        .put(image);
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {},
-        (error) => {
-          console.log(error);
-        },
-        () => {
-          uploadTask.snapshot.ref
-            .getDownloadURL()
-            .then((url) => {
-              props.updateCarModel(carModel, carType, url);
-            })
-            .then(() => {
-              var fileRef = storage.refFromURL(props.carModel.url);
-              fileRef.delete().then(() => {
-                props.handleClose();
-                console.log("masuk");
-              });
-            });
-        }
-      );
-    }
-
-    // props.updateCarModel(carModel, carType);
+    validate();
   };
 
   const handleChange = (e) => {
@@ -116,6 +95,77 @@ const UpdateCarModel = (props) => {
     return () => URL.revokeObjectURL(objectUrl);
   }, [image]);
 
+  React.useEffect(() => {
+    console.log(errors);
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      if (image === null) {
+        props.updateCarModel(carModel, carType, props.carModel.url);
+        props.handleClose();
+      } else {
+        const uploadTask = storage
+          .ref("images/modelLogo/" + image.name)
+          .put(image);
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {},
+          (error) => {
+            console.log(error);
+          },
+          () => {
+            uploadTask.snapshot.ref
+              .getDownloadURL()
+              .then((url) => {
+                props.updateCarModel(carModel, carType, url);
+              })
+              .then(() => {
+                var fileRef = storage.refFromURL(props.carModel.url);
+                fileRef.delete().then(() => {
+                  props.handleClose();
+                });
+              });
+          }
+        );
+      }
+    }
+  }, [validated]);
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.carModelName =
+      carModel.carModelName === "" ? "Model name is required" : "";
+    temp.carType = carType === "" ? "Body Type is required" : "";
+    temp.image = image === null || undefined ? "Image is required" : "";
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+    console.log(temp);
+    console.log(flagTemp);
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+  };
+
   return (
     <form
       id="updateCarModelForm"
@@ -134,7 +184,8 @@ const UpdateCarModel = (props) => {
         color="secondary"
         fullWidth
         required
-        // error={titleError}
+        error={errorFlags[0]}
+        helperText={errors.carModelName}
       />
       <TextField
         id="carType"
@@ -146,6 +197,8 @@ const UpdateCarModel = (props) => {
         variant="outlined"
         fullWidth
         required
+        error={errorFlags[1]}
+        helperText={errors.carType}
       >
         {processedCarTypes.map((option) => (
           <MenuItem key={option.value} value={option.value}>
@@ -171,6 +224,12 @@ const UpdateCarModel = (props) => {
           )}
         </label>
       </Box>
+
+      {errorFlags[2] && (
+        <Typography variant="caption" className={classes.helperText}>
+          {errors.image}
+        </Typography>
+      )}
 
       <Box align="center" className={classes.buttonContainer}>
         <Button type="submit" color="primary" variant="contained">

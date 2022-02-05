@@ -53,12 +53,11 @@ const BodyType = (props) => {
       <div className={classes.root}>
         <Drawer />
         <div className={classes.page}>
-          <Search />
           <Typography color="primary" variant="h3">
-            Car Type
+            Body Type
           </Typography>
           <CarTypeCard carTypes={carTypes} />
-          <FormDialog title="New Car Type" />
+          <FormDialog title="New Body Type" />
         </div>
       </div>
     );

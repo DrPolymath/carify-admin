@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, makeStyles, TextField } from "@material-ui/core";
+import { Box, Button, makeStyles, TextField, Typography } from "@material-ui/core";
 import { connect } from "react-redux";
 import { updateCarType } from "../../actions/carType.actions";
 import { storage } from "../../config/fbConfig";
@@ -29,6 +29,10 @@ const useStyles = makeStyles((theme) => {
       justifyContent: "center",
       padding: theme.spacing(2),
     },
+    helperText: {
+      paddingLeft: theme.spacing(1.5),
+      color: "#FF0000",
+    },
   };
 });
 
@@ -38,27 +42,14 @@ const UpdateCarType = (props) => {
   const [carType, setCarType] = React.useState(props.carType);
   const [image, setImage] = React.useState("");
   const [preview, setPreview] = React.useState(undefined);
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (preview === undefined) {
-      props.updateCarType(carType, "");
-      props.handleClose();
-      props.handleCloseMoreMenu();
-    } else if (image === "") {
-      props.updateCarType(carType, carType.url);
-      props.handleClose();
-      props.handleCloseMoreMenu();
-    } else {
-      if (carType.url) {
-        var fileRef = storage.refFromURL(carType.url);
-        fileRef.delete().then(() => {
-          uploadImage();
-        });
-      } else {
-        uploadImage();
-      }
-    }
+    validate();
   };
 
   const uploadImage = () => {
@@ -112,6 +103,66 @@ const UpdateCarType = (props) => {
     return () => URL.revokeObjectURL(objectUrl);
   }, [image]);
 
+  React.useEffect(() => {
+    console.log(errors);
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      if (preview === undefined) {
+        props.updateCarType(carType, "");
+        props.handleClose();
+        props.handleCloseMoreMenu();
+      } else if (image === "") {
+        props.updateCarType(carType, carType.url);
+        props.handleClose();
+        props.handleCloseMoreMenu();
+      } else {
+        if (carType.url) {
+          var fileRef = storage.refFromURL(carType.url);
+          fileRef.delete().then(() => {
+            uploadImage();
+          });
+        } else {
+          uploadImage();
+        }
+      }
+    }
+  }, [validated]);
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.carTypeName =
+      carType.carTypeName === "" ? "Body Type is required" : "";
+    temp.image =
+      carType.image === null || undefined ? "Body Type is required" : "";
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+  };
+
   return (
     <form
       id="updateCarTypeForm"
@@ -125,11 +176,13 @@ const UpdateCarType = (props) => {
         onChange={handleChange}
         value={carType.carTypeName}
         className={classes.field}
-        label="Car Type Name"
+        label="Body Type Name"
         variant="outlined"
         color="secondary"
         fullWidth
         required
+        error={errorFlags[0]}
+        helperText={errors.carTypeName}
       />
 
       <Box className={classes.imageInputContainer}>
@@ -149,6 +202,12 @@ const UpdateCarType = (props) => {
           )}
         </label>
       </Box>
+
+      {errorFlags[1] && (
+        <Typography variant="caption" className={classes.helperText}>
+          {errors.image}
+        </Typography>
+      )}
 
       <Box align="center" className={classes.buttonContainer}>
         <Button type="submit" color="primary" variant="contained">

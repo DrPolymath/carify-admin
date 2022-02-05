@@ -72,7 +72,6 @@ const Admin = (props) => {
       <div className={classes.root}>
         <Drawer />
         <div className={classes.page}>
-          <Search />
           <Grid
             container
             direction="row"

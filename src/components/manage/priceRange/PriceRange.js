@@ -61,7 +61,6 @@ const PriceRange = (props) => {
       <div className={classes.root}>
         <Drawer />
         <div className={classes.page}>
-          <Search />
           <Typography className={classes.title} color="primary" variant="h3">
             Price Range
           </Typography>

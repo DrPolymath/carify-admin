@@ -169,21 +169,22 @@ const Dashboard = (props) => {
   const groupByModel = () => {
     var result = [];
     carVariantsArr.reduce(function (res, value) {
-      if (!res[value.carModelName]) {
-        res[value.carModelName] = {
+      if (!res[value.id]) {
+        res[value.id] = {
           carBrandName: value.carBrandName,
           carModelName: value.carModelName,
+          carVariantName: value.carVariantName,
           totalClick: 0,
           maleClick: 0,
           femaleClick: 0,
           cmId: value.cmId,
           url: value.url,
         };
-        result.push(res[value.carModelName]);
+        result.push(res[value.id]);
       }
-      res[value.carModelName].totalClick += value.totalClick;
-      res[value.carModelName].maleClick += value.maleClick;
-      res[value.carModelName].femaleClick += value.femaleClick;
+      res[value.id].totalClick += value.totalClick;
+      res[value.id].maleClick += value.maleClick;
+      res[value.id].femaleClick += value.femaleClick;
       return res;
     }, {});
 
@@ -196,19 +197,19 @@ const Dashboard = (props) => {
   const groupByBrand = () => {
     var result = [];
     carVariantsArr.reduce(function (res, value) {
-      if (!res[value.carBrandName]) {
-        res[value.carBrandName] = {
+      if (!res[value.cbId]) {
+        res[value.cbId] = {
           carBrandName: value.carBrandName,
           totalClick: 0,
           maleClick: 0,
           femaleClick: 0,
           cbId: value.cbId,
         };
-        result.push(res[value.carBrandName]);
+        result.push(res[value.cbId]);
       }
-      res[value.carBrandName].totalClick += value.totalClick;
-      res[value.carBrandName].maleClick += value.maleClick;
-      res[value.carBrandName].femaleClick += value.femaleClick;
+      res[value.cbId].totalClick += value.totalClick;
+      res[value.cbId].maleClick += value.maleClick;
+      res[value.cbId].femaleClick += value.femaleClick;
       return res;
     }, {});
 
@@ -239,7 +240,7 @@ const Dashboard = (props) => {
         </div>
       );
     } else if (isAuthorised === true || isAuthorised === false) {
-      if (!isAuthorised) {
+      if (!isAuthorised && !profile.disabled) {
         return (
           <div className={classes.container}>
             <div className="content">
@@ -257,8 +258,8 @@ const Dashboard = (props) => {
                     </Typography>
                     <Box className={classes.requestedTextContainer}>
                       <Typography variant="subtitle1" align="center">
-                        Your request has been sent. You will receive an email
-                        once your request has been approved.
+                        Your request has been sent. You will be able to access
+                        CARIFY once your request has been approved.
                       </Typography>
                     </Box>
                     <Box align="center" className={classes.buttonContainer}>
@@ -306,7 +307,16 @@ const Dashboard = (props) => {
                         </Grid>
                         <Grid item md={5}>
                           <Box className={classes.mfcContainer}>
-                            <Tooltip title={groupByModelArr[0].carBrandName + " " + groupByModelArr[0].carModelName} placement="bottom">
+                            <Tooltip
+                              title={
+                                groupByModelArr[0].carBrandName +
+                                " " +
+                                groupByModelArr[0].carModelName +
+                                " " +
+                                groupByModelArr[0].carVariantName
+                              }
+                              placement="bottom"
+                            >
                               <img
                                 src={groupByModelArr[0].url}
                                 alt="MFC"
@@ -371,6 +381,10 @@ const Dashboard = (props) => {
                       </Grid>
                     </Card>
                   </Grid>
+                  {console.log("groupByBrandArr")}
+                  {console.log(groupByBrandArr)}
+                  {console.log("groupByModelArr")}
+                  {console.log(groupByModelArr)}
                   <Grid className={classes.upperContent} item md={6} lg={3}>
                     <Card className={classes.cardContainer}>
                       <Grid container className={classes.gridContainer}>
@@ -407,7 +421,7 @@ const Dashboard = (props) => {
                         <Typography className={classes.lowerTitle} variant="h4">
                           Top Favorite Car
                         </Typography>
-                        <BarChart carModel={groupByModelArr}/>
+                        <BarChart carModel={groupByModelArr} />
                       </Card>
                     </Grid>
                   </Grid>
@@ -420,7 +434,7 @@ const Dashboard = (props) => {
                         <Typography className={classes.lowerTitle} variant="h6">
                           Top Favorite Brand
                         </Typography>
-                        <PieChart carBrand={groupByBrandArr}/>
+                        <PieChart carBrand={groupByBrandArr} />
                       </Card>
                     </Grid>
                   </Grid>
@@ -437,8 +451,7 @@ const Dashboard = (props) => {
                   className={classes.title}
                   color="primary"
                   variant="h3"
-                >
-                </Typography>
+                ></Typography>
                 <div className={classes.page}>
                   <Box className={classes.loadingcontainer}>
                     <CircularProgress />
@@ -448,6 +461,46 @@ const Dashboard = (props) => {
             </div>
           );
         }
+      } else if (!isAuthorised && profile.disabled) {
+        return (
+          <div className={classes.container}>
+            <div className="content">
+              <Box className={classes.logo}>
+                <img src="/Logo.png" alt="Logo" width="150" />
+              </Box>
+              <Grid container className={classes.gridContainer}>
+                <Grid className={classes.section} item md={6}>
+                  <img src="/Admin.png" alt="illustration" />
+                </Grid>
+                <Grid className={classes.section} item md={6}>
+                  <Card className={classes.card}>
+                    <Typography color="primary" variant="h3" align="center">
+                      DISABLED ACCOUNT
+                    </Typography>
+                    <Box className={classes.requestedTextContainer}>
+                      <Typography variant="subtitle1" align="center">
+                        Your account has been disabled. Try contacting CARIFY
+                        admin on carify.fscit.um@gmail.com if you think there
+                        was a mistake.
+                      </Typography>
+                    </Box>
+                    <Box align="center" className={classes.buttonContainer}>
+                      <Button
+                        type="submit"
+                        color="primary"
+                        onClick={() => signOut()}
+                        variant="contained"
+                        href="/signin"
+                      >
+                        Login
+                      </Button>
+                    </Box>
+                  </Card>
+                </Grid>
+              </Grid>
+            </div>
+          </div>
+        );
       }
     }
   };

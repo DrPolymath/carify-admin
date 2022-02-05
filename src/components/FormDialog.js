@@ -250,17 +250,17 @@ const FormDialog = (props) => {
               handleCloseMoreMenu={handleCloseMoreMenu}
             />
           ) : null}
-          {title === "New Car Type" ? (
+          {title === "New Body Type" ? (
             <AddCarType handleClose={handleClose} />
           ) : null}
-          {title === "Update Car Type" ? (
+          {title === "Update Body Type" ? (
             <UpdateCarType
               carType={carType}
               handleClose={handleClose}
               handleCloseMoreMenu={handleCloseMoreMenu}
             />
           ) : null}
-          {title === "Delete Car Type" ? (
+          {title === "Delete Body Type" ? (
             <DeleteCarType
               carType={carType}
               handleClose={handleClose}

@@ -20,12 +20,11 @@ const options = {
 const BarChart = ({ carModel }) => {
   const data = {
     labels: [
-      carModel[0].carBrandName + " " + carModel[0].carModelName,
-      carModel[1].carBrandName + " " + carModel[1].carModelName,
-      carModel[2].carBrandName + " " + carModel[2].carModelName,
-      carModel[3].carBrandName + " " + carModel[3].carModelName,
-      carModel[4].carBrandName + " " + carModel[4].carModelName,
-      carModel[5].carBrandName + " " + carModel[5].carModelName,
+      carModel[0].carBrandName + " " + carModel[0].carModelName + " " + carModel[0].carVariantName,
+      carModel[1].carBrandName + " " + carModel[1].carModelName + " " + carModel[1].carVariantName,
+      carModel[2].carBrandName + " " + carModel[2].carModelName + " " + carModel[2].carVariantName,
+      carModel[3].carBrandName + " " + carModel[3].carModelName + " " + carModel[3].carVariantName,
+      carModel[4].carBrandName + " " + carModel[4].carModelName + " " + carModel[4].carVariantName,
     ],
     datasets: [
       {
@@ -36,7 +35,6 @@ const BarChart = ({ carModel }) => {
           carModel[2].maleClick,
           carModel[3].maleClick,
           carModel[4].maleClick,
-          carModel[5].maleClick,
         ],
         backgroundColor: "rgb(33, 150, 243)",
       },
@@ -48,7 +46,6 @@ const BarChart = ({ carModel }) => {
           carModel[2].femaleClick,
           carModel[3].femaleClick,
           carModel[4].femaleClick,
-          carModel[5].femaleClick,
         ],
         backgroundColor: "rgb(255, 234, 0)",
       },

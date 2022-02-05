@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  CircularProgress,
   makeStyles,
   MenuItem,
   TextField,
@@ -9,7 +10,6 @@ import { Stack } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { addCarVariant } from "../../actions/carVariant.actions";
-import { storage } from "../../config/fbConfig";
 
 const useStyles = makeStyles((theme) => {
   return {
@@ -23,6 +23,14 @@ const useStyles = makeStyles((theme) => {
       paddingTop: theme.spacing(2),
       display: "flex",
       justifyContent: "flex-end",
+    },
+    loadingcontainer: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: theme.spacing(10),
+      width: "100%",
+      height: "80%",
     },
   };
 });
@@ -65,7 +73,16 @@ const AddCarVariant = ({
       };
     })
   );
-  // let carVariant = null;
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
+  // const [errorsColor, setErrorsColor] = React.useState([
+  //   { colorNameErrorsColor: "", colorCodeErrorsColor: "" },
+  // ]);
+  // const [errorFlagsColor, setErrorFlagsColor] = React.useState([
+  //   { colorNameErrorFlagsColor: false, colorCodeErrorFlagsColor: false },
+  // ]);
 
   useEffect(() => {
     setProcessedCarModels(
@@ -97,7 +114,7 @@ const AddCarVariant = ({
         price: priceTemp,
         priceRange,
         prId,
-        colorList
+        colorList,
       });
     }
   }, [carVariantName, cmId, price, priceRange, prId, colorList]);
@@ -136,16 +153,43 @@ const AddCarVariant = ({
     const list = [...colorList];
     list[index][name] = value;
     setColorList(list);
+
+    // const { name, value } = e.target;
+    // const list = [...colorList];
+    // list[index][name] = value;
+    // setColorList(list);
+
+    // const { name, value } = e.target;
+    // const list = [...colorList];
+    // list[index][name] = value;
+    // setColorList(list);
+
   };
 
   const handleColorAdd = () => {
     setColorList([...colorList, { colorName: "", colorCode: "" }]);
+    // setErrorFlagsColor([
+    //   ...errorFlagsColor,
+    //   { colorNameErrorFlagsColor: false, colorCodeErrorFlagsColor: false },
+    // ]);
+    // setErrorsColor([
+    //   ...errorsColor,
+    //   { colorNameErrorsColor: "", colorCodeErrorsColor: "" },
+    // ]);
   };
 
   const handleColorDelete = () => {
     const list = [...colorList];
     list.splice(colorList.length - 1, 1);
     setColorList(list);
+
+    // const listErrorsColor = [...errorsColor];
+    // listErrorsColor.splice(errorsColor.length - 1, 1);
+    // setErrorsColor(listErrorsColor);
+
+    // const listErrorFlagsColor = [...errorFlagsColor];
+    // listErrorFlagsColor.splice(errorFlagsColor.length - 1, 1);
+    // setColorList(listErrorFlagsColor);
   };
 
   const getColorNameLabel = (index) => {
@@ -158,135 +202,243 @@ const AddCarVariant = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setToSave(true);
-    handlePriceRange();
-    handleClose();
+    validate();
   };
 
-  return (
-    <form
-      id="addCarModelForm"
-      noValidate
-      autoComplete="off"
-      onSubmit={handleSubmit}
-    >
-      <TextField
-        id="carBrandName"
-        select
-        label="Brand Name"
-        value={cbId}
-        onChange={(e) => handleBrandSelection(e)}
-        className={classes.field}
-        variant="outlined"
-        required
+  React.useEffect(() => {
+    console.log(errors);
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      setToSave(true);
+      handlePriceRange();
+      handleClose();
+    }
+  }, [validated]);
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.cbId = cbId === "" ? "Brand is required" : "";
+    temp.cmId = cmId === "" ? "Model is required" : "";
+    temp.carVariantName =
+      carVariantName === "" ? "Variant name is required" : "";
+
+    if (price === "") {
+      temp.price = "Price is required";
+    } else if (isNaN(price)) {
+      temp.price = "Price must only contain numbers";
+    } else if (parseInt(price) < 0) {
+      temp.price = "Please enter valid price";
+    } else {
+      temp.price = "";
+    }
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    // let tempColor = { ...errorsColor };
+    // let flagTempColor = { ...errorFlagsColor };
+
+    // colorList.map((item, index) => {
+    //   console.log("index");
+    //   console.log(index);
+    //   if (item.colorName === "") {
+    //     tempColor[index].colorNameErrorsColor =
+    //       "Color Name " + (index + 1) + " is required";
+    //     flagTempColor[index].colorNameErrorFlagsColor = false;
+    //   } else {
+    //     tempColor[index].colorNameErrorsColor = "";
+    //     flagTempColor[index].colorNameErrorFlagsColor = true;
+    //   }
+
+    //   if (item.colorCode === "") {
+    //     tempColor[index].colorCodeErrorsColor =
+    //       "Color Code " + (index + 1) + " is required";
+    //     flagTempColor[index].colorCodeErrorFlagsColor = false;
+    //   } else {
+    //     tempColor[index].colorCodeErrorsColor = "";
+    //     flagTempColor[index].colorCodeErrorFlagsColor = true;
+    //   }
+    // });
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+    // setErrorsColor({
+    //   ...tempColor,
+    // });
+    // setErrorFlagsColor({
+    //   ...flagTempColor,
+    // });
+  };
+  // if (errorFlagsColor && errorsColor[0] !== undefined) {
+    return (
+      <form
+        id="addCarModelForm"
+        noValidate
+        autoComplete="off"
+        onSubmit={handleSubmit}
       >
-        {processedCarBrands.map((option) => (
-          <MenuItem key={option.value} value={option.value}>
-            {option.label}
-          </MenuItem>
-        ))}
-      </TextField>
+        {/* {console.log("errorsColor")}
+        {console.log(errorsColor)}
+        {console.log("errorFlagsColor")}
+        {console.log(errorFlagsColor)} */}
+        <TextField
+          id="carBrandName"
+          select
+          label="Brand Name"
+          value={cbId}
+          onChange={(e) => handleBrandSelection(e)}
+          className={classes.field}
+          variant="outlined"
+          required
+          error={errorFlags[0]}
+          helperText={errors.cbId}
+        >
+          {processedCarBrands.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
 
-      <TextField
-        id="carModelName"
-        select
-        label="Model Name"
-        value={cmId}
-        onChange={(e) => setCmId(e.target.value)}
-        className={classes.field}
-        variant="outlined"
-        required
-      >
-        {processedCarModels.map((option) => (
-          <MenuItem key={option.value} value={option.value}>
-            {option.label}
-          </MenuItem>
-        ))}
-      </TextField>
+        <TextField
+          id="carModelName"
+          select
+          label="Model Name"
+          value={cmId}
+          onChange={(e) => setCmId(e.target.value)}
+          className={classes.field}
+          variant="outlined"
+          required
+          error={errorFlags[1]}
+          helperText={errors.cmId}
+        >
+          {processedCarModels.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
 
-      <TextField
-        id="carVariantName"
-        type="text"
-        onChange={(e) => setCarVariantName(e.target.value)}
-        value={carVariantName}
-        className={classes.field}
-        label="Variant Name"
-        variant="outlined"
-        color="secondary"
-        fullWidth
-        required
-      />
+        <TextField
+          id="carVariantName"
+          type="text"
+          onChange={(e) => setCarVariantName(e.target.value)}
+          value={carVariantName}
+          className={classes.field}
+          label="Variant Name"
+          variant="outlined"
+          color="secondary"
+          fullWidth
+          required
+          error={errorFlags[2]}
+          helperText={errors.carVariantName}
+        />
 
-      <TextField
-        id="carPrice"
-        type="number"
-        onChange={(e) => setPrice(e.target.value)}
-        value={price}
-        className={classes.field}
-        label="Price"
-        variant="outlined"
-        color="secondary"
-        fullWidth
-        required
-      />
+        <TextField
+          id="carPrice"
+          type="number"
+          onChange={(e) => setPrice(e.target.value)}
+          value={price}
+          className={classes.field}
+          label="Price"
+          variant="outlined"
+          color="secondary"
+          fullWidth
+          required
+          error={errorFlags[3]}
+          helperText={errors.price}
+        />
 
-      {colorList.map((singleColor, index) => (
-        <div key={index}>
-          <TextField
-            name="colorName"
-            type="text"
-            onChange={(e) => handleColorChange(e, index)}
-            value={singleColor.colorName}
-            className={classes.field}
-            label={getColorNameLabel(index)}
-            variant="outlined"
-            color="secondary"
-            fullWidth
-            required
-          />
+        {colorList.map((singleColor, index) => (
+          <div key={index}>
+            {/* {console.log(errorFlagsColor[index])} */}
+            <TextField
+              name="colorName"
+              type="text"
+              onChange={(e) => handleColorChange(e, index)}
+              value={singleColor.colorName}
+              className={classes.field}
+              label={getColorNameLabel(index)}
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              required
+              // error={errorFlagsColor[index].colorNameErrorFlagsColor}
+              // helperText={errorsColor[index].colorNameErrorsColor}
+            />
 
-          <TextField
-            name="colorCode"
-            type="text"
-            onChange={(e) => handleColorChange(e, index)}
-            value={singleColor.colorCode}
-            className={classes.field}
-            label={getColorCodeLabel(index)}
-            variant="outlined"
-            color="secondary"
-            fullWidth
-            required
-          />
-          {colorList.length === index + 1 && (
-            <Stack spacing={2} direction="row">
-              <Button
-                color="primary"
-                variant="outlined"
-                onClick={() => handleColorAdd()}
-              >
-                Add
-              </Button>
-              {colorList.length > 1 && (
+            <TextField
+              name="colorCode"
+              type="text"
+              onChange={(e) => handleColorChange(e, index)}
+              value={singleColor.colorCode}
+              className={classes.field}
+              label={getColorCodeLabel(index)}
+              variant="outlined"
+              color="secondary"
+              fullWidth
+              required
+              // error={errorFlagsColor[index].colorNameErrorFlagsColor}
+              // helperText={errorsColor[index].colorCodeErrorsColor}
+            />
+            {colorList.length === index + 1 && (
+              <Stack spacing={2} direction="row">
                 <Button
                   color="primary"
                   variant="outlined"
-                  onClick={() => handleColorDelete()}
+                  onClick={() => handleColorAdd()}
                 >
-                  Remove
+                  Add
                 </Button>
-              )}
-            </Stack>
-          )}
-        </div>
-      ))}
+                {colorList.length > 1 && (
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    onClick={() => handleColorDelete()}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </Stack>
+            )}
+          </div>
+        ))}
 
-      <Box align="center" className={classes.buttonContainer}>
-        <Button type="submit" color="primary" variant="contained">
-          Save
-        </Button>
-      </Box>
-    </form>
-  );
+        <Box align="center" className={classes.buttonContainer}>
+          <Button type="submit" color="primary" variant="contained">
+            Save
+          </Button>
+        </Box>
+      </form>
+    );
+  // } else {
+  //   return (
+  //     <Box className={classes.loadingcontainer}>
+  //       <CircularProgress />
+  //     </Box>
+  //   );
+  // }
 };
 
 const mapDispatchToProps = (dispatch) => {

@@ -54,7 +54,6 @@ const CarBrand = (props) => {
     <div className={classes.root}>
       <Drawer />
       <div className={classes.page}>
-        <Search />
         <Typography color="primary" variant="h3">
           Car Brand
         </Typography>

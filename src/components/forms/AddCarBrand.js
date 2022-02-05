@@ -1,4 +1,10 @@
-import { Box, Button, makeStyles, TextField, Typography } from "@material-ui/core";
+import {
+  Box,
+  Button,
+  makeStyles,
+  TextField,
+  Typography,
+} from "@material-ui/core";
 import React from "react";
 import { connect } from "react-redux";
 import { addCarBrand } from "../../actions/carBrand.actions";
@@ -30,9 +36,9 @@ const useStyles = makeStyles((theme) => {
       padding: theme.spacing(2),
     },
     helperText: {
-        paddingLeft: theme.spacing(1.5),
-        color: "#FF0000"
-    }
+      paddingLeft: theme.spacing(1.5),
+      color: "#FF0000",
+    },
   };
 });
 
@@ -131,8 +137,6 @@ const AddCarBrand = (props) => {
     });
   };
 
-  const imageInput = () => {};
-
   const handleChange = (e) => {
     setCarBrand({
       ...carBrand,
@@ -195,7 +199,7 @@ const AddCarBrand = (props) => {
       </Box>
 
       {errorFlags[1] && (
-        <Typography variant="caption" className = {classes.helperText}>
+        <Typography variant="caption" className={classes.helperText}>
           {errors.image}
         </Typography>
       )}

@@ -5,13 +5,10 @@ import Paper from '@material-ui/core/Paper';
 import Popper from '@material-ui/core/Popper';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
-// import { makeStyles } from '@material-ui/core/styles';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import FormDialog from './FormDialog';
-import DeleteIcon from '@material-ui/icons/Delete';
 
-const MoreMenu = ({ title, data, handleRemove, carBrand, carType }) => {
-    // const classes = useStyles();
+const MoreMenu = ({ title, carBrand, carType }) => {
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef(null);
 
@@ -34,28 +31,15 @@ const MoreMenu = ({ title, data, handleRemove, carBrand, carType }) => {
         }
     }
 
-    // return focus to the button when we transitioned from !open -> open
     const prevOpen = React.useRef(open);
     React.useEffect(() => {
         if (prevOpen.current === true && open === false) {
         anchorRef.current.focus();
         }
-
         prevOpen.current = open;
     }, [open]);
-
-    // const form = carBrand ? <UpdateCarBrand carBrand={carBrand}/> : <UpdateCarType carType={carType}/>;
-
     return (
         <div>
-            {/* <Button
-            ref={anchorRef}
-            aria-controls={open ? 'menu-list-grow' : undefined}
-            aria-haspopup="true"
-            onClick={handleToggle}
-            >
-            Toggle Menu Grow
-            </Button> */}
             <MoreVertIcon
                 color='primary'
                 ref={anchorRef}
@@ -83,7 +67,7 @@ const MoreMenu = ({ title, data, handleRemove, carBrand, carType }) => {
                             {carBrand ? (
                                 <FormDialog title="Delete Car Brand" carBrand={carBrand} toDelete="yes" moreMenu="yes" handleCloseMoreMenu={handleToggle}/>
                             ) : (
-                                <FormDialog title="Delete Car Type" carType={carType} toDelete="yes" moreMenu="yes"  handleCloseMoreMenu={handleToggle}/>
+                                <FormDialog title="Delete Body Type" carType={carType} toDelete="yes" moreMenu="yes"  handleCloseMoreMenu={handleToggle}/>
                             )}
                         </MenuItem>
                     </MenuList>

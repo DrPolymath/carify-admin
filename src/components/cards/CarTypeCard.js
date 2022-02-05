@@ -42,7 +42,7 @@ const CarTypeCard = ({ carTypes, deleteCarType }) => {
                         <Grid className={classes.content} item md={4} key={carType.id}>
                             <Card className={classes.card}>
                                 <Box className={classes.cardHeader}>
-                                    <MoreMenu title='Update Car Type' data={carType} handleRemove={handleRemove} carType={carType}/>
+                                    <MoreMenu title='Update Body Type' data={carType} handleRemove={handleRemove} carType={carType}/>
                                 </Box>
                                 <Box className={classes.cardContent}>
                                     <img src={carType.url} alt="carTypeLogo" style={{ maxHeight: 100, maxWidth: 150, objectFit: 'contain', margin: 10 }}/>
