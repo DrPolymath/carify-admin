@@ -74,7 +74,7 @@ const SignUp = ({ auth, signUp }) => {
   const [lastname, setLastname] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [gender, setGender] = useState("");
-
+  
   const genderValue = [
     {
       value: "Male",

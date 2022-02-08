@@ -116,22 +116,23 @@ const Profile = (props) => {
     id: auth.uid,
   });
 
-  const getProfileImageUrl = () =>{
-    if (profile.url){
-      return profile.url
+  const getProfileImageUrl = () => {
+    if (profile.url) {
+      return profile.url;
     }
-    return "/user.png"
-  }
+    return "/user.png";
+  };
 
   if (!auth.uid) return <Redirect to="/signin" />;
   //Unauthorised user
   if (auth.uid && profile.authorised === false) return <Redirect to="/" />;
 
   if (profile.authorised) {
-    {console.log(profile)}
+    {
+      console.log(profile);
+    }
     return (
       <div className={classes.root}>
-        {console.log(props)}
         <Drawer />
         <div className={classes.page}>
           <Box className={classes.header}>
@@ -209,6 +210,9 @@ const Profile = (props) => {
                 </Box>
                 <Box className={classes.labelsContainer}>
                   <Typography className={classes.labels} variant="subtitle1">
+                    Username
+                  </Typography>
+                  <Typography className={classes.labels} variant="subtitle1">
                     Gender
                   </Typography>
                   <Typography className={classes.labels} variant="subtitle1">
@@ -216,6 +220,13 @@ const Profile = (props) => {
                   </Typography>
                 </Box>
                 <Box className={classes.fieldContainer}>
+                <TextField
+                    id="username"
+                    variant="outlined"
+                    className={classes.fields}
+                    value={profile.username}
+                    disabled
+                  />
                   <TextField
                     id="gender"
                     variant="outlined"

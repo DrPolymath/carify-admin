@@ -25,7 +25,10 @@ const UpdateCarVariant = (props) => {
   const [priceConverted, setPriceConverted] = React.useState(
     parseInt(props.carVariant.price.substring(3).replace(",", ""))
   );
-  console.log(carVariant);
+  const [errors, setErrors] = useState({});
+  const [errorFlags, setErrorFlags] = useState({});
+  const [validated, setValidated] = useState(false);
+  const [initialRender, setInitialRender] = useState(true);
 
   const handlePriceRange = () => {
     let priceTemp = parseInt(priceConverted).toLocaleString();
@@ -53,9 +56,7 @@ const UpdateCarVariant = (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setToSave(true);
-    handlePriceRange();
-    props.handleClose();
+    validate();
   };
 
   const handleChange = (e) => {
@@ -66,12 +67,64 @@ const UpdateCarVariant = (props) => {
   };
 
   React.useEffect(() => {
-    console.log(toSave);
     if (toSave && carVariant !== null) {
       props.updateCarVariant(carVariant);
       props.handleRerender(carVariant);
     }
   }, [toSave, carVariant]);
+
+  React.useEffect(() => {
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      setToSave(true);
+      handlePriceRange();
+      props.handleClose();
+    }
+  }, [validated]);
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.carVariantName =
+    carVariant.carVariantName === "" ? "Variant name is required" : "";
+    console.log("carVariant.priceConverted")
+    console.log(priceConverted)
+    if (priceConverted === "") {
+      temp.priceConverted = "Price is required";
+    } else if (isNaN(priceConverted)) {
+      temp.priceConverted = "Price must only contain numbers";
+    } else if (parseInt(priceConverted) < 0) {
+      temp.priceConverted = "Please insert valid price";
+    } else {
+      temp.priceConverted = "";
+    }
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+  };
 
   return (
     <form
@@ -80,7 +133,6 @@ const UpdateCarVariant = (props) => {
       autoComplete="off"
       onSubmit={handleSubmit}
     >
-      {console.log(props)}
       <TextField
         id="carVariantName"
         type="text"
@@ -92,6 +144,8 @@ const UpdateCarVariant = (props) => {
         color="secondary"
         fullWidth
         required
+        error={errorFlags[0]}
+        helperText={errors.carVariantName}
       />
 
       <TextField
@@ -105,6 +159,8 @@ const UpdateCarVariant = (props) => {
         color="secondary"
         fullWidth
         required
+        error={errorFlags[1]}
+        helperText={errors.priceConverted}
       />
 
       <Box align="center" className={classes.buttonContainer}>

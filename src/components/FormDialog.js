@@ -244,7 +244,7 @@ const FormDialog = (props) => {
             />
           ) : null}
           {title === "Delete Car Brand" ? (
-            <deleteCarBrand
+            <DeleteCarBrand
               carBrand={carBrand}
               handleClose={handleClose}
               handleCloseMoreMenu={handleCloseMoreMenu}

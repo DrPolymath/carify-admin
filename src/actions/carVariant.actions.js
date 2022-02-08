@@ -1,3 +1,5 @@
+import { Redirect } from "react-router-dom";
+
 export const addCarVariant = (carVariant, cbId) => {
   return (dispatch, getState, { getFirebase }) => {
     const firestore = getFirebase().firestore();
@@ -24,6 +26,7 @@ export const addCarVariant = (carVariant, cbId) => {
           id: key[0],
         }));
         temp.map((color) => {
+          // let colorCode = color.colorCode.substring(1);
           firestore
             .collection("carBrand")
             .doc(cbId)
@@ -70,8 +73,13 @@ export const addCarVariant = (carVariant, cbId) => {
 
 export const updateCarVariantColor = (colorList, carVariant) => {
   return (dispatch, getState, { getFirebase }) => {
+    var allPass = true;
+    var error;
     const firestore = getFirebase().firestore();
+    console.log("colorList")
+    console.log(colorList)
     colorList.map((color) => {
+      // let newColorCode = color.colorCode.substring(1);
       firestore
         .collection("carBrand")
         .doc(carVariant.cbId)
@@ -85,27 +93,35 @@ export const updateCarVariantColor = (colorList, carVariant) => {
           {
             colorName: color.colorName,
             colorCode: color.colorCode,
+            vId: carVariant.id,
           },
           { merge: true }
         )
         .then(() => {
-          dispatch({
-            type: "UPDATE_CAR_VARIANT_COLOR",
-            carVariant,
-          });
+          allPass = true;
         })
         .catch((err) => {
-          dispatch({
-            type: "UPDATE_CAR_VARIANT_COLOR_ERR",
-            err,
-          });
+          allPass = false;
+          error = err;
         });
     });
+    if (allPass === true) {
+      dispatch({
+        type: "UPDATE_CAR_VARIANT_COLOR",
+        carVariant,
+      });
+    } else {
+      dispatch({
+        type: "UPDATE_CAR_VARIANT_COLOR_ERR",
+        error,
+      });
+    }
   };
 };
 
 export const updateCarVariant = (carVariant) => {
   return (dispatch, getState, { getFirebase }) => {
+    console.log(carVariant);
     const firestore = getFirebase().firestore();
     const profile = getState().firebase.profile;
     firestore
@@ -182,6 +198,7 @@ export const deleteCarVariant = (carVariant) => {
             " from car variant",
           timestamp: new Date(),
         });
+        <Redirect to="/carlist" />;
         dispatch({
           type: "DELETE_CAR_VARIANT",
         });

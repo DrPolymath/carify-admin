@@ -25,10 +25,13 @@ const UpdateCarVariantWithColor = (props) => {
   const [carVariant, setCarVariant] = useState(props.carVariant);
   const [colorList, setColorList] = useState(props.colors);
   const [toSave, setToSave] = React.useState(false);
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
   const [priceConverted, setPriceConverted] = React.useState(
     parseInt(props.carVariant.price.substring(3).replace(",", ""))
   );
-  console.log(carVariant);
 
   const handlePriceRange = () => {
     let priceTemp = parseInt(priceConverted).toLocaleString();
@@ -56,9 +59,7 @@ const UpdateCarVariantWithColor = (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setToSave(true);
-    handlePriceRange();
-    props.handleClose();
+    validate();
   };
 
   const handleColorChange = (e, index) => {
@@ -77,7 +78,17 @@ const UpdateCarVariantWithColor = (props) => {
   };
 
   const handleColorAdd = () => {
-    setColorList([...colorList, { colorName: "", colorCode: "" }]);
+    setColorList([
+      ...colorList,
+      {
+        colorName: "",
+        colorCode: "",
+        errorName: "",
+        errorFlagName: false,
+        errorCode: "",
+        errorFlagCode: false,
+      },
+    ]);
   };
 
   const handleColorDelete = () => {
@@ -93,13 +104,144 @@ const UpdateCarVariantWithColor = (props) => {
     });
   };
 
+  const addErrorHandling = () => {
+    if (
+      colorList[0].colorCode &&
+      colorList[0].colorName &&
+      colorList[0].id &&
+      colorList[0].vId
+    ) {
+      let holdColorList = colorList;
+      colorList.map((item, index) => {
+        // if(item.colorCode)
+        holdColorList[index] = {
+          ...holdColorList[index],
+          errorName: "",
+          errorFlagName: false,
+          errorCode: "",
+          errorFlagCode: false,
+        };
+      });
+      setColorList(holdColorList);
+    }
+  };
+
   React.useEffect(() => {
-    console.log(toSave);
     if (toSave && carVariant !== null) {
       props.updateCarVariant(carVariant);
-      props.updateCarVariantColor(colorList, carVariant)
+      props.updateCarVariantColor(colorList, carVariant);
+      props.handleClose();
+      // console.log("updateCarVariant");
+      // console.log(carVariant);
+      // console.log(colorList);
     }
   }, [toSave, carVariant]);
+
+  React.useEffect(() => {
+    addErrorHandling();
+  }, [colorList]);
+
+  React.useEffect(() => {
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      let allPass = false;
+      colorList.map((item) => {
+        if (item.errorName === "" && item.errorCode === "") {
+          allPass = true;
+        } else {
+          allPass = false;
+        }
+      });
+      if (allPass) {
+        setValidated(true);
+      } else {
+        setValidated(false);
+      }
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      setToSave(true);
+      handlePriceRange();
+    }
+  }, [validated]);
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.carVariantName =
+      carVariant.carVariantName === "" ? "Variant name is required" : "";
+
+    if (priceConverted === "") {
+      temp.priceConverted = "Price is required";
+    } else if (isNaN(priceConverted)) {
+      temp.priceConverted = "Price must only contain numbers";
+    } else if (parseInt(priceConverted) < 0) {
+      temp.priceConverted = "Please enter valid price";
+    } else {
+      temp.priceConverted = "";
+    }
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    let colorObjects = colorList;
+    colorList.map((item, index) => {
+      let tempErrorName = item.errorName;
+      let tempErrorCode = item.errorCode;
+      let tempErrorFlagName = item.errorFlagName;
+      let tempErrorFlagCode = item.errorFlagCode;
+
+      if (item.colorName === "") {
+        tempErrorName = "Color name is required";
+        tempErrorFlagName = true;
+      } else {
+        tempErrorName = "";
+        tempErrorFlagName = false;
+      }
+
+      if (item.colorCode === "") {
+        tempErrorCode = "Color code is required";
+        tempErrorFlagCode = true;
+      } else if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$$/.test(item.colorCode)) {
+        tempErrorCode = "Please remove #";
+        tempErrorFlagCode = true;
+      } else if (!/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$$/.test(item.colorCode)) {
+        tempErrorCode = "Color code must be in HEX format";
+        tempErrorFlagCode = true;
+      } else {
+        tempErrorCode = "";
+        tempErrorFlagCode = false;
+      }
+
+      colorObjects[index] = {
+        ...colorObjects[index],
+        errorName: tempErrorName,
+        errorFlagName: tempErrorFlagName,
+        errorCode: tempErrorCode,
+        errorFlagCode: tempErrorFlagCode,
+      };
+    });
+    setColorList(colorObjects);
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+  };
 
   return (
     <form
@@ -108,7 +250,6 @@ const UpdateCarVariantWithColor = (props) => {
       autoComplete="off"
       onSubmit={handleSubmit}
     >
-      {console.log(props)}
       <TextField
         id="carVariantName"
         type="text"
@@ -120,6 +261,8 @@ const UpdateCarVariantWithColor = (props) => {
         color="secondary"
         fullWidth
         required
+        error={errorFlags[0]}
+        helperText={errors.carVariantName}
       />
 
       <TextField
@@ -133,6 +276,8 @@ const UpdateCarVariantWithColor = (props) => {
         color="secondary"
         fullWidth
         required
+        error={errorFlags[1]}
+        helperText={errors.priceConverted}
       />
       {colorList.map((singleColor, index) => (
         <div key={index}>
@@ -147,6 +292,8 @@ const UpdateCarVariantWithColor = (props) => {
             color="secondary"
             fullWidth
             required
+            error={singleColor.errorFlagName}
+            helperText={singleColor.errorName}
           />
 
           <TextField
@@ -160,6 +307,8 @@ const UpdateCarVariantWithColor = (props) => {
             color="secondary"
             fullWidth
             required
+            error={singleColor.errorFlagCode}
+            helperText={singleColor.errorCode}
           />
           {colorList.length === index + 1 && (
             <Stack spacing={2} direction="row">

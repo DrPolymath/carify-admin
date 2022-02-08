@@ -1,4 +1,4 @@
-import { Box, Button, makeStyles, TextField } from "@material-ui/core";
+import { Box, Button, makeStyles, TextField, Typography } from "@material-ui/core";
 import React from "react";
 import { connect } from "react-redux";
 import { addPhoto } from "../../actions/carPhoto.actions";
@@ -30,50 +30,28 @@ const useStyles = makeStyles((theme) => {
       justifyContent: "center",
       padding: theme.spacing(2),
     },
+    helperText: {
+      paddingLeft: theme.spacing(1.5),
+      color: "#FF0000",
+    },
   };
 });
 
 const AddPhoto = ({ addPhoto, handleClose, carVariant }) => {
   const classes = useStyles();
   const [photos, setPhotos] = React.useState({
-    cmId: '',
+    cmId: "",
     image: null,
   });
   const [preview, setPreview] = React.useState(undefined);
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (photos.image) {
-      const uploadTask = storage
-        .ref(
-          "images/carPhotos/" +
-            carVariant.carBrandName +
-            "/" +
-            carVariant.carModelName +
-            "/" +
-            photos.image.name
-        )
-        .put(photos.image);
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {},
-        (error) => {
-          console.log(error);
-        },
-        () => {
-          uploadTask.snapshot.ref.getDownloadURL().then((url) => {
-            // console.log(url)
-            let photosWithUrl = {
-              cmId: carVariant.cmId,
-              carPhoto: url,
-            };
-            addPhoto(carVariant, photosWithUrl);
-            handleClose();
-          });
-        }
-      );
-    }
+    validate();
   };
 
   const handleChange = (e) => {
@@ -110,6 +88,76 @@ const AddPhoto = ({ addPhoto, handleClose, carVariant }) => {
     return () => URL.revokeObjectURL(objectUrl);
   }, [photos]);
 
+  React.useEffect(() => {
+    console.log(errors);
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  React.useEffect(() => {
+    if (validated === true) {
+      if (photos.image) {
+        const uploadTask = storage
+          .ref(
+            "images/carPhotos/" +
+              carVariant.carBrandName +
+              "/" +
+              carVariant.carModelName +
+              "/" +
+              photos.image.name
+          )
+          .put(photos.image);
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {},
+          (error) => {
+            console.log(error);
+          },
+          () => {
+            uploadTask.snapshot.ref.getDownloadURL().then((url) => {
+              // console.log(url)
+              let photosWithUrl = {
+                cmId: carVariant.cmId,
+                carPhoto: url,
+              };
+              addPhoto(carVariant, photosWithUrl);
+              handleClose();
+            });
+          }
+        );
+      }
+    }
+  }, [validated]);
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.image =
+    photos.image === null || undefined ? "Image is required" : "";
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
+  };
+
   return (
     <form
       id="addPhotoForm"
@@ -117,19 +165,6 @@ const AddPhoto = ({ addPhoto, handleClose, carVariant }) => {
       autoComplete="off"
       onSubmit={handleSubmit}
     >
-      {/* <TextField
-        id="test"
-        type="text"
-        onChange={handleChange}
-        value={photos.cmId}
-        className={classes.field}
-        label="Test Name"
-        variant="outlined"
-        color="secondary"
-        fullWidth
-        required
-        // error={titleError}
-      /> */}
       <Box className={classes.imageInputContainer}>
         <input
           accept="image/*"
@@ -147,8 +182,13 @@ const AddPhoto = ({ addPhoto, handleClose, carVariant }) => {
           )}
         </label>
       </Box>
-      {console.log(carVariant)}
-      {console.log(photos)}
+      
+      {errorFlags[0] && (
+        <Typography variant="caption" className={classes.helperText}>
+          {errors.image}
+        </Typography>
+      )}
+
       <Box align="center" className={classes.buttonContainer}>
         <Button type="submit" color="primary" variant="contained">
           Save

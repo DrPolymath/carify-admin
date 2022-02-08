@@ -114,7 +114,7 @@ TablePaginationActions.propTypes = {
 const CarVariantTable = ({ carVariants, handleRerender, priceRanges }) => {
   const classes = useStyles();
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [rowsPerPage, setRowsPerPage] = React.useState(-1);
   const [tableRender, setTableRender] = React.useState("");
 
   const handleTableRerender = (val) => {

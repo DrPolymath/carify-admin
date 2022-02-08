@@ -1,7 +1,12 @@
 import React from "react";
 import { Redirect } from "react-router-dom";
 import Drawer from "../../layout/Drawer";
-import { Box, CircularProgress, makeStyles, Typography } from "@material-ui/core";
+import {
+  Box,
+  CircularProgress,
+  makeStyles,
+  Typography,
+} from "@material-ui/core";
 import Search from "../../Search";
 import { compose } from "redux";
 import { connect } from "react-redux";
@@ -34,74 +39,131 @@ const useStyles = makeStyles((theme) => ({
 
 const CarVariant = (props) => {
   const classes = useStyles();
-  const { auth, carBrands, carModels, carVariants, carTypes, priceRanges, profile } =
-    props;
+  const {
+    auth,
+    carBrands,
+    carModels,
+    carVariants,
+    carTypes,
+    priceRanges,
+    profile,
+  } = props;
   const [rerender, setRerender] = React.useState("");
+  const [carVariantsArr, setCarVariantsArr] = React.useState();
+  const [carModelsArr, setCarModelsArr] = React.useState();
+  const [priceRangesArr, setPriceRangesArr] = React.useState();
+  const [filterResult, setFilterResult] = React.useState();
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const filterSearch = (carVariantsArr, query) => {
+    if (query === "") {
+      return carVariantsArr;
+    }
+
+    return carVariantsArr.filter((item) => {
+      var lowerCased = item.list.toLowerCase();
+      return lowerCased.includes(query);
+    });
+  };
+  const filteredSearch = filterSearch(carVariantsArr, searchQuery);
+
+  React.useEffect(() => {
+    setFilterResult(filteredSearch);
+  }, [searchQuery]);
 
   const handleRerender = (val) => {
     setRerender(val);
   };
 
-  console.log(rerender);
+  React.useEffect(() => {
+    if (carBrands && carModels && carVariants && carTypes && priceRanges) {
+      let priceRangesArrTemp = Object.entries(priceRanges).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
+
+      let carModelsArrTemp = Object.entries(carModels).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
+
+      let carVariantsArrTemp = Object.entries(carVariants).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
+
+      let carTypesArr = Object.entries(carTypes).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
+
+      carModelsArrTemp = carModelsArrTemp.map((item) => {
+        return {
+          ...item,
+          carTypeName: carTypesArr.find((o) => o.id === item.btId).carTypeName,
+        };
+      });
+
+      carVariantsArrTemp = carVariantsArrTemp.map((item) => {
+        return {
+          ...item,
+          cbId: carBrands.find(
+            (o) =>
+              o.id === carModelsArrTemp.find((o) => o.id === item.cmId).cbId
+          ).id,
+          carBrandName: carBrands.find(
+            (o) =>
+              o.id === carModelsArrTemp.find((o) => o.id === item.cmId).cbId
+          ).carBrandName,
+          carModelName: carModelsArrTemp.find((o) => o.id === item.cmId)
+            .carModelName,
+          carTypeName: carModelsArrTemp.find((o) => o.id === item.cmId)
+            .carTypeName,
+          bodyType: carModelsArrTemp.find((o) => o.id === item.cmId).bodyType,
+          url: carModelsArrTemp.find((o) => o.id === item.cmId).url,
+        };
+      });
+
+      carVariantsArrTemp = carVariantsArrTemp.map((item) => {
+        return {
+          ...item,
+          list:
+            item.carBrandName +
+            " " +
+            item.carModelName +
+            " " +
+            item.carVariantName +
+            " " +
+            item.bodyType +
+            " " +
+            item.price,
+        };
+      });
+
+      setPriceRangesArr(priceRangesArrTemp);
+      setCarModelsArr(carModelsArrTemp);
+      setCarVariantsArr(carVariantsArrTemp);
+      setFilterResult(carVariantsArrTemp);
+    }
+  }, [carBrands, carModels, carVariants, carTypes, priceRanges]);
   //Route securing
   if (!auth.uid) return <Redirect to="/signin" />;
   //Unauthorised user
-  if(auth.uid && profile.authorised===false) return <Redirect to="/" />;
+  if (auth.uid && profile.authorised === false) return <Redirect to="/" />;
 
-  if (carBrands && carModels && carVariants && carTypes && priceRanges) {
-    let priceRangesArr = Object.entries(priceRanges).map((key) => ({
-      ...key[1],
-      id: key[0],
-    }));
-
-    let carModelsArr = Object.entries(carModels).map((key) => ({
-      ...key[1],
-      id: key[0],
-    }));
-
-    let carVariantsArr = Object.entries(carVariants).map((key) => ({
-      ...key[1],
-      id: key[0],
-    }));
-
-    let carTypesArr = Object.entries(carTypes).map((key) => ({
-      ...key[1],
-      id: key[0],
-    }));
-
-    carModelsArr = carModelsArr.map((item) => {
-      return {
-        ...item,
-        carTypeName: carTypesArr.find((o) => o.id === item.btId).carTypeName,
-      };
-    });
-
-    carVariantsArr = carVariantsArr.map((item) => {
-      return {
-        ...item,
-        cbId: carBrands.find(
-          (o) => o.id === carModelsArr.find((o) => o.id === item.cmId).cbId
-        ).id,
-        carBrandName: carBrands.find(
-          (o) => o.id === carModelsArr.find((o) => o.id === item.cmId).cbId
-        ).carBrandName,
-        carModelName: carModelsArr.find((o) => o.id === item.cmId).carModelName,
-        carTypeName: carModelsArr.find((o) => o.id === item.cmId).carTypeName,
-        bodyType: carModelsArr.find((o) => o.id === item.cmId).bodyType,
-        url: carModelsArr.find((o) => o.id === item.cmId).url,
-      };
-    });
-
+  if (carVariantsArr && carModelsArr && priceRangesArr) {
     return (
       <div className={classes.root}>
         <Drawer />
         <div className={classes.page}>
-          <Search />
+          <Search
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
           <Typography className={classes.title} color="primary" variant="h3">
             Car Variant
           </Typography>
           <CarVariantTable
-            carVariants={carVariantsArr}
+            carVariants={filterResult}
             priceRanges={priceRangesArr}
             handleRerender={handleRerender}
           />

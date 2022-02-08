@@ -49,7 +49,6 @@ const CarList = (props) => {
   const [carModelsArr, setCarModelsArr] = React.useState();
   const [priceRangesArr, setPriceRangesArr] = React.useState();
   const [filterResult, setFilterResult] = React.useState();
-
   const [searchQuery, setSearchQuery] = React.useState("");
   const filterSearch = (carVariantsArr, query) => {
     if (query === "") {
@@ -174,7 +173,6 @@ const CarList = (props) => {
         <Drawer />
         <div className={classes.page}>
           <Search
-            carVariantsArr={carVariantsArr}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
           />
@@ -211,7 +209,6 @@ const CarList = (props) => {
 };
 
 const mapStateToProps = (state) => {
-  console.log(state)
   return {
     auth: state.firebase.auth,
     carBrands: state.firestore.ordered.carBrand,

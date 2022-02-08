@@ -86,6 +86,10 @@ const CarDetail = (props) => {
     handleVariantPageTab(newValue);
   };
 
+  React.useEffect(() => {
+    handleVariantPageTab(newVId);
+  },[]);
+
   const handleVariantPageTab = (newValue) => {
     let id;
     let vIdIndex;
@@ -185,7 +189,7 @@ const CarDetail = (props) => {
           };
         })
         .filter((carVariant) => carVariant.cmId === cmId);
-        setPriceRangesArr(priceRangesArrTemp);
+      setPriceRangesArr(priceRangesArrTemp);
       setCarVariantsArr(temp);
     }
   }, [carModels, carVariants, priceRanges]);

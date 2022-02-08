@@ -233,7 +233,6 @@ const CarDetailSummary = ({
 
         <Grid item xs={1} md={1}>
           <Box component="div" className={classes.buttonContainer}>
-            {console.log(colors)}
             <FormDialog
               carVariant={carVariantsArr[variantValue]}
               colors={color}

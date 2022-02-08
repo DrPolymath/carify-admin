@@ -1,4 +1,4 @@
-export const updateProfile = (profile, role) => {
+export const updateProfile = (profile, role, url) => {
   var isSuperAdmin;
   if (role === "Super Admin") {
     isSuperAdmin = true;
@@ -19,7 +19,8 @@ export const updateProfile = (profile, role) => {
           email: profile.email,
           phoneNumber: profile.phoneNumber,
           gender: profile.gender,
-          superAdmin: isSuperAdmin
+          superAdmin: isSuperAdmin,
+          url: url,
         },
         { merge: true }
       )

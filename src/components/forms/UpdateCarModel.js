@@ -109,7 +109,7 @@ const UpdateCarModel = (props) => {
 
   React.useEffect(() => {
     if (validated === true) {
-      if (image === null) {
+      if (preview === undefined) {
         props.updateCarModel(carModel, carType, props.carModel.url);
         props.handleClose();
       } else {

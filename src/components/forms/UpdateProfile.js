@@ -8,6 +8,7 @@ import {
 } from "@material-ui/core";
 import { connect } from "react-redux";
 import { updateProfile } from "../../actions/profile.actions";
+import { storage } from "../../config/fbConfig";
 
 const useStyles = makeStyles((theme) => {
   return {
@@ -51,11 +52,14 @@ const gender = [
 
 const UpdateProfile = (props) => {
   const classes = useStyles();
-
   const [profile, setProfile] = React.useState(props.profileInfo);
-  const [profilePicture, setProfilePicture] = React.useState(null);
+  const [profilePicture, setProfilePicture] = React.useState("");
   const [preview, setPreview] = React.useState(undefined);
   const [role, setRole] = React.useState("");
+  const [errors, setErrors] = React.useState({});
+  const [errorFlags, setErrorFlags] = React.useState({});
+  const [validated, setValidated] = React.useState(false);
+  const [initialRender, setInitialRender] = React.useState(true);
 
   const roleList = [
     {
@@ -68,16 +72,8 @@ const UpdateProfile = (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    //upload image
-    // if no image if image dont change
-    //  dont upload or delete
-    // else if image change
-    // delete and upload
-    // create storage directory 
 
-    props.updateProfile(profile, role);
-    props.handleClose();
+    validate();
   };
 
   const handleChange = (e) => {
@@ -101,17 +97,19 @@ const UpdateProfile = (props) => {
     }
   }, [profile]);
 
-  React.useEffect(() => {
+  const checkProfilePicture = () => {
     if (!profilePicture) {
       setPreview(undefined);
       return;
     }
-
     const objectUrl = URL.createObjectURL(profilePicture);
     setPreview(objectUrl);
-
     // free memory when ever this component is unmounted
     return () => URL.revokeObjectURL(objectUrl);
+  };
+
+  React.useEffect(() => {
+    checkProfilePicture();
   }, [profilePicture]);
 
   const handleImgChange = (e) => {
@@ -120,6 +118,131 @@ const UpdateProfile = (props) => {
       return;
     }
     setProfilePicture(e.target.files[0]);
+  };
+
+  React.useEffect(() => {
+    if (initialRender === true) {
+      setValidated(false);
+      setInitialRender(false);
+    } else if (Object.values(errors).every((x) => x === "")) {
+      setValidated(true);
+    } else {
+      setValidated(false);
+    }
+  }, [errors]);
+
+  const uploadImage = () => {
+    const uploadTask = storage
+      .ref("images/adminProfile/" + profilePicture.name)
+      .put(profilePicture);
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {},
+      (error) => {
+        console.log(error);
+      },
+      () => {
+        uploadTask.snapshot.ref
+          .getDownloadURL()
+          .then((url) => {
+            updateProfile(url);
+          })
+          .then(() => {
+            props.handleClose();
+          });
+      }
+    );
+  };
+
+  React.useEffect(() => {
+    if (validated === true) {
+      if (preview === undefined) {
+        if (profile.url === "") {
+          updateProfile("");
+          props.handleClose();
+        } else {
+          updateProfile(profile.url);
+          props.handleClose();
+        }
+      } else {
+        if (profile.url !== "") {
+          var fileRef = storage.refFromURL(profile.url);
+          fileRef.delete().then(() => {
+            uploadImage();
+          });
+        } else {
+          uploadImage();
+        }
+      }
+    }
+  }, [validated]);
+
+  const updateProfile = (url) => {
+    props.updateProfile(profile, role, url);
+  };
+
+  const validate = () => {
+    let temp = { ...errors };
+    let flagTemp = { ...errorFlags };
+
+    temp.username = profile.username === "" ? "Username is required" : "";
+
+    if (profile.firstname === "") {
+      temp.firstname = "First name is required";
+    } else if (!/^[a-zA-Z]+$/.test(profile.firstname)) {
+      temp.firstname = "Invalid first name";
+    } else {
+      temp.firstname = "";
+    }
+
+    if (profile.lastname === "") {
+      temp.lastname = "Last name is required";
+    } else if (!/^[a-zA-Z]+$/.test(profile.lastname)) {
+      temp.lastname = "Invalid last name";
+    } else {
+      temp.lastname = "";
+    }
+
+    if (profile.email === "") {
+      temp.email = "Email is required";
+    } else if (
+      !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(profile.email)
+    ) {
+      temp.email = "Invalid email";
+    } else {
+      temp.email = "";
+    }
+
+    if (profile.phoneNumber === "") {
+      temp.phoneNumber = "Phone number is required";
+    } else if (isNaN(profile.phoneNumber)) {
+      temp.phoneNumber = "Phone number must only contain numbers";
+    } else if (
+      !(profile.phoneNumber.length >= 10 && profile.phoneNumber.length < 12)
+    ) {
+      temp.phoneNumber = "Please insert valid phone number";
+    } else {
+      temp.phoneNumber = "";
+    }
+
+    temp.gender = profile.gender === "" ? "Gender is required" : "";
+
+    temp.role = role === "" ? "Role is required" : "";
+
+    flagTemp = Object.entries(temp).map((item) => {
+      if (item[1] === "") {
+        return item[0], false;
+      } else {
+        return item[1], true;
+      }
+    });
+
+    setErrors({
+      ...temp,
+    });
+    setErrorFlags({
+      ...flagTemp,
+    });
   };
 
   return (
@@ -141,11 +264,23 @@ const UpdateProfile = (props) => {
             onChange={handleImgChange}
           />
           <label htmlFor="image" className={classes.chooseImgBtnContainer}>
-            {profilePicture ? (
-              <img src={preview} alt="profilePicture" width="150" />
+            {
+              profilePicture ? (
+                <img src={preview} alt="profilePicture" width="150" />
+              ) : profile.url !== "" ? (
+                <img src={profile.url} alt="profilePicture" width="150" />
+              ) : (
+                <img src="/TU.png" alt="profilePicture" />
+              )
+              //change
+              //url
+              //undefined
+            }
+            {/* {profile.url === "" && !profilePicture ? (
+              <img src="/TU.png" alt="profilePicture" />
             ) : (
-              <img src="/TU.png" alt="defaultProfilePicture" />
-            )}
+              <img src={profile.url} alt="defaultProfilePicture" width="150" />
+            )} */}
           </label>
         </Box>
         <TextField
@@ -159,7 +294,8 @@ const UpdateProfile = (props) => {
           color="secondary"
           fullWidth
           required
-          // error={titleError}
+          error={errorFlags[0]}
+          helperText={errors.username}
         />
         <TextField
           name="firstname"
@@ -172,7 +308,8 @@ const UpdateProfile = (props) => {
           color="secondary"
           fullWidth
           required
-          // error={titleError}
+          error={errorFlags[1]}
+          helperText={errors.firstname}
         />
         <TextField
           name="lastname"
@@ -185,7 +322,8 @@ const UpdateProfile = (props) => {
           color="secondary"
           fullWidth
           required
-          // error={titleError}
+          error={errorFlags[2]}
+          helperText={errors.lastname}
         />
         <TextField
           name="email"
@@ -198,7 +336,8 @@ const UpdateProfile = (props) => {
           color="secondary"
           fullWidth
           required
-          // error={titleError}
+          error={errorFlags[3]}
+          helperText={errors.email}
         />
         <TextField
           name="phoneNumber"
@@ -211,7 +350,8 @@ const UpdateProfile = (props) => {
           color="secondary"
           fullWidth
           required
-          // error={titleError}
+          error={errorFlags[4]}
+          helperText={errors.phoneNumber}
         />
 
         <TextField
@@ -224,6 +364,8 @@ const UpdateProfile = (props) => {
           color="secondary"
           fullWidth
           variant="outlined"
+          error={errorFlags[5]}
+          helperText={errors.gender}
         >
           {gender.map((option) => (
             <MenuItem key={option.value} value={option.value}>
@@ -243,6 +385,8 @@ const UpdateProfile = (props) => {
             variant="outlined"
             color="secondary"
             fullWidth
+            error={errorFlags[6]}
+            helperText={errors.role}
           >
             {roleList.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -264,7 +408,8 @@ const UpdateProfile = (props) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    updateProfile: (profile, role) => dispatch(updateProfile(profile, role)),
+    updateProfile: (profile, role, url) =>
+      dispatch(updateProfile(profile, role, url)),
   };
 };
 

@@ -1,12 +1,18 @@
 import React from "react";
 import { Redirect } from "react-router-dom";
 import Drawer from "../layout/Drawer";
-import { Box, CircularProgress, makeStyles, Typography } from "@material-ui/core";
+import {
+  Box,
+  CircularProgress,
+  makeStyles,
+  Typography,
+} from "@material-ui/core";
 import Search from "../Search";
 import { compose } from "redux";
 import { connect } from "react-redux";
 import { firestoreConnect } from "react-redux-firebase";
 import LogTable from "../tables/LogTable";
+import moment from "moment";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -34,6 +40,54 @@ const useStyles = makeStyles((theme) => ({
 const Log = (props) => {
   const classes = useStyles();
   const { auth, activitylogs, profile } = props;
+  const [filterResult, setFilterResult] = React.useState();
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [activityList, setActivityList] = React.useState();
+  const filterSearch = (activityList, query) => {
+    if (query === "") {
+      return activityList;
+    }
+
+    return activityList.filter((item) => {
+      var lowerCased = item.list.toLowerCase();
+      return lowerCased.includes(query);
+    });
+  };
+  const filteredSearch = filterSearch(activityList, searchQuery);
+  React.useEffect(() => {
+    setFilterResult(filteredSearch);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    getList();
+  }, [activitylogs]);
+  React.useEffect(() => {
+    getList();
+  }, []);
+
+  const getList = () => {
+    if (activitylogs) {
+      let activitylogsTemp = activitylogs.map((item) => {
+        return {
+          ...item,
+          list:
+            item.username +
+            " " +
+            item.email +
+            " " +
+            moment(item.timestamp.toDate()).format("L") +
+            " " +
+            moment(item.timestamp.toDate()).format("HH:mm:ss") +
+            " " +
+            item.activity +
+            " " +
+            item.description,
+        };
+      });
+      setActivityList(activitylogsTemp)
+      setFilterResult(activitylogsTemp);
+    }
+  };
   //Route securing
   if (!auth.uid) return <Redirect to="/signin" />;
   //Unauthorised user
@@ -55,11 +109,11 @@ const Log = (props) => {
       <div className={classes.root}>
         <Drawer />
         <div className={classes.page}>
-          <Search />
+          <Search searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <Typography className={classes.title} color="primary" variant="h3">
             Admin Log
           </Typography>
-          <LogTable activitylogs={activitylogs} />
+          <LogTable activitylogs={filterResult} />
         </div>
       </div>
     );

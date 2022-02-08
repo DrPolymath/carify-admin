@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { Redirect } from "react-router-dom";
 import Drawer from "../../layout/Drawer";
-import { Box, CircularProgress, makeStyles, Typography } from "@material-ui/core";
+import {
+  Box,
+  CircularProgress,
+  makeStyles,
+  Typography,
+} from "@material-ui/core";
 import Search from "../../Search";
 import { compose } from "redux";
 import { connect, useSelector } from "react-redux";
@@ -35,23 +40,60 @@ const useStyles = makeStyles((theme) => ({
 
 const CarModel = (props) => {
   const classes = useStyles();
-  const { auth, carBrands, deleteCarModel, carTypes, profile } = props;
+  const { auth, carBrands, carModels, carTypes, profile } = props;
+  const [carModelsArr, setCarModelsArr] = useState();
   const [rerender, setRerender] = useState(carBrands);
+  const [filterResult, setFilterResult] = React.useState();
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const filterSearch = (carModelsArr, query) => {
+    if (query === "") {
+      return carModelsArr;
+    }
+
+    return carModelsArr.filter((item) => {
+      var lowerCased = item.list.toLowerCase();
+      return lowerCased.includes(query);
+    });
+  };
+  const filteredSearch = filterSearch(carModelsArr, searchQuery);
+
+  React.useEffect(() => {
+    setFilterResult(filteredSearch);
+  }, [searchQuery]);
 
   const handleRerender = (val) => {
     setRerender(val);
   };
 
-  useFirestoreConnect([
-    {
-      collection: "carBrand",
-    },
-    {
-      collectionGroup: "carModel",
-    },
-  ]); // sync todos collection from Firestore into redux
+  React.useEffect(() => {
+    if (carBrands && carModels && carTypes) {
+      let carModelsArrTemp = Object.entries(carModels).map((key) => ({
+        ...key[1],
+        id: key[0],
+      }));
 
-  const carModels = useSelector((state) => state.firestore.data.carModel);
+      carModelsArrTemp = carModelsArrTemp.map((item) => {
+        return {
+          ...item,
+          carBrandName: carBrands.find((o) => o.id === item.cbId).carBrandName,
+          bodyTypeName: carTypes.find((o) => o.id === item.btId).carTypeName,
+        };
+      });
+      carModelsArrTemp = carModelsArrTemp.map((item) => {
+        return {
+          ...item,
+          list:
+            item.carBrandName +
+            " " +
+            item.bodyTypeName +
+            " " +
+            item.carModelName,
+        };
+      });
+      setCarModelsArr(carModelsArrTemp);
+      setFilterResult(carModelsArrTemp)
+    }
+  }, [carBrands, carModels, carTypes]);
 
   //Route securing
   if (!auth.uid) return <Redirect to="/signin" />;
@@ -59,30 +101,17 @@ const CarModel = (props) => {
   if (auth.uid && profile.authorised === false) return <Redirect to="/" />;
 
   if (carBrands && carModels) {
-    let carModelsArr = Object.entries(carModels).map((key) => ({
-      ...key[1],
-      id: key[0],
-    }));
-
-    carModelsArr = carModelsArr.map((item) => {
-      return {
-        ...item,
-        carBrandName: carBrands.find((o) => o.id === item.cbId).carBrandName,
-        bodyTypeName: carTypes.find((o) => o.id === item.btId).carTypeName,
-      };
-    });
-
     return (
       <div className={classes.root}>
         <Drawer />
         <div className={classes.page}>
-          <Search />
+          <Search searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <Typography className={classes.title} color="primary" variant="h3">
             Car Model
           </Typography>
           <CarModelTable
             carTypes={carTypes}
-            carModels={carModelsArr}
+            carModels={filterResult}
             rerender={rerender}
             handleRerender={handleRerender}
           />
@@ -116,6 +145,7 @@ const mapStateToProps = (state) => {
     carBrands: state.firestore.ordered.carBrand,
     carTypes: state.firestore.ordered.carType,
     profile: state.firebase.profile,
+    carModels: state.firestore.data.carModel,
   };
 };
 
@@ -127,12 +157,15 @@ const mapDispatchToProps = (dispatch) => {
 
 export default compose(
   connect(mapStateToProps, mapDispatchToProps),
-  firestoreConnect((props) => [
+  firestoreConnect([
     {
       collection: "carBrand",
     },
     {
       collection: "carType",
+    },
+    {
+      collectionGroup: "carModel",
     },
   ])
 )(CarModel);

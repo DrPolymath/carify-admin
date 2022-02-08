@@ -39,8 +39,8 @@ const DeleteCarVariant = ({ carVariant, handleClose, deleteCarVariant, handleRer
     e.preventDefault();
     deleteCarVariant(carVariant);
     handleClose();
-    handleTableRerender(carVariant)
-    handleRerender(carVariant)
+    // handleTableRerender(carVariant)
+    // handleRerender(carVariant)
   };
 
   return (
